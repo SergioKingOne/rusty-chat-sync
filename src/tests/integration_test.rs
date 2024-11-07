@@ -1,4 +1,4 @@
-use chat_frontend::components::chat::Chat;
+use rusty_chat_sync::components::chat::Chat;
 use wasm_bindgen_test::*;
 use web_sys::window;
 use yew::prelude::*;

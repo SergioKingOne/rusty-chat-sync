@@ -99,21 +99,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
-name = "chat_frontend"
-version = "0.1.0"
-dependencies = [
- "gloo 0.11.0",
- "graphql_client",
- "serde",
- "serde_json",
- "uuid",
- "wasm-bindgen",
- "wasm-bindgen-test",
- "yew",
- "yew-router",
-]
-
-[[package]]
 name = "combine"
 version = "3.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1013,6 +998,24 @@ name = "rustversion"
 version = "1.0.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0e819f2bc632f285be6d7cd36e25940d45b2391dd6d9b939e79de557f7014248"
+
+[[package]]
+name = "rusty_chat_sync"
+version = "0.1.0"
+dependencies = [
+ "gloo 0.11.0",
+ "graphql_client",
+ "js-sys",
+ "serde",
+ "serde_json",
+ "uuid",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "wasm-bindgen-test",
+ "web-sys",
+ "yew",
+ "yew-router",
+]
 
 [[package]]
 name = "ryu"

@@ -1,5 +1,3 @@
-# infrastructure/appsync/schema.graphql
-
 type Message {
   messageId: ID!
   content: String!

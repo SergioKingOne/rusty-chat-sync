@@ -11,8 +11,10 @@ pub fn message_list(props: &MessageListProps) -> Html {
     html! {
         <ul>
             { for props.messages.iter().map(|msg| html! {
-                <li key={msg.messageId.clone()}>
-                    <strong>{ &msg.author }</strong>: { &msg.content }
+                <li class="message-item" key="{msg.messageId.clone()}">
+                    <div class="message-content">
+                        <strong>{ &msg.author }</strong>{": "}{ &msg.content }
+                    </div>
                 </li>
             }) }
         </ul>

@@ -1,5 +1,5 @@
 [package]
-name = "chat_frontend"
+name = "rusty_chat_sync"
 version = "0.1.0"
 edition = "2021"
 
@@ -12,6 +12,9 @@ wasm-bindgen = "0.2"
 gloo = { version = "0.11.0", features = ["timers", "net"] }
 graphql_client = "0.14"
 uuid = { version = "1.1", features = ["v4"] }
+wasm-bindgen-futures = "0.4"
+web-sys = "0.3"
+js-sys = "0.3"
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3"
