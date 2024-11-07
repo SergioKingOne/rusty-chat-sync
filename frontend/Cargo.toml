@@ -1,0 +1,23 @@
+[package]
+name = "chat_frontend"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+yew = { version = "0.21.0", features = ["csr"] }
+yew-router = "0.18.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+wasm-bindgen = "0.2"
+gloo = { version = "0.11.0", features = ["timers", "net"] }
+graphql_client = "0.14"
+uuid = { version = "1.1", features = ["v4"] }
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[profile.release]
+opt-level = "s"

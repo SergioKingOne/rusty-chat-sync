@@ -1,0 +1,26 @@
+# infrastructure/appsync/schema.graphql
+
+type Message {
+  messageId: ID!
+  content: String!
+  author: String!
+  timestamp: Float!
+}
+
+type Query {
+  listMessages: [Message!]!
+}
+
+type Mutation {
+  createMessage(content: String!, author: String!): Message!
+}
+
+type Subscription {
+  onCreateMessage: Message! @aws_subscribe(mutations: ["createMessage"])
+}
+
+schema {
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
+}

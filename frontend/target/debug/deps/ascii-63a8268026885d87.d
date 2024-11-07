@@ -1,0 +1,11 @@
+/home/sergio/projects/rusty-chat-sync/frontend/target/debug/deps/libascii-63a8268026885d87.rmeta: /home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ascii-0.9.3/src/lib.rs /home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ascii-0.9.3/src/ascii_char.rs /home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ascii-0.9.3/src/ascii_str.rs /home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ascii-0.9.3/src/ascii_string.rs /home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ascii-0.9.3/src/free_functions.rs
+
+/home/sergio/projects/rusty-chat-sync/frontend/target/debug/deps/libascii-63a8268026885d87.rlib: /home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ascii-0.9.3/src/lib.rs /home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ascii-0.9.3/src/ascii_char.rs /home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ascii-0.9.3/src/ascii_str.rs /home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ascii-0.9.3/src/ascii_string.rs /home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ascii-0.9.3/src/free_functions.rs
+
+/home/sergio/projects/rusty-chat-sync/frontend/target/debug/deps/ascii-63a8268026885d87.d: /home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ascii-0.9.3/src/lib.rs /home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ascii-0.9.3/src/ascii_char.rs /home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ascii-0.9.3/src/ascii_str.rs /home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ascii-0.9.3/src/ascii_string.rs /home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ascii-0.9.3/src/free_functions.rs
+
+/home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ascii-0.9.3/src/lib.rs:
+/home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ascii-0.9.3/src/ascii_char.rs:
+/home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ascii-0.9.3/src/ascii_str.rs:
+/home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ascii-0.9.3/src/ascii_string.rs:
+/home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/ascii-0.9.3/src/free_functions.rs:

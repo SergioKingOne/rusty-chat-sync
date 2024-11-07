@@ -1,0 +1,10 @@
+/home/sergio/projects/rusty-chat-sync/frontend/target/debug/deps/libimplicit_clone-c21ba59d719d1e89.rmeta: /home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/implicit-clone-0.4.9/src/lib.rs /home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/implicit-clone-0.4.9/src/sync.rs /home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/implicit-clone-0.4.9/src/array.rs /home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/implicit-clone-0.4.9/src/map.rs /home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/implicit-clone-0.4.9/src/string.rs /home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/implicit-clone-0.4.9/src/unsync.rs
+
+/home/sergio/projects/rusty-chat-sync/frontend/target/debug/deps/implicit_clone-c21ba59d719d1e89.d: /home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/implicit-clone-0.4.9/src/lib.rs /home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/implicit-clone-0.4.9/src/sync.rs /home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/implicit-clone-0.4.9/src/array.rs /home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/implicit-clone-0.4.9/src/map.rs /home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/implicit-clone-0.4.9/src/string.rs /home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/implicit-clone-0.4.9/src/unsync.rs
+
+/home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/implicit-clone-0.4.9/src/lib.rs:
+/home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/implicit-clone-0.4.9/src/sync.rs:
+/home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/implicit-clone-0.4.9/src/array.rs:
+/home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/implicit-clone-0.4.9/src/map.rs:
+/home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/implicit-clone-0.4.9/src/string.rs:
+/home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/implicit-clone-0.4.9/src/unsync.rs:

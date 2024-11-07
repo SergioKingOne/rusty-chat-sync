@@ -1,0 +1,10 @@
+#if ($ctx.error)
+  $util.error($ctx.error.message, $ctx.error.type)
+#end
+
+{
+  "messageId": "$ctx.result.messageId.S",
+  "content": "$ctx.result.content.S",
+  "author": "$ctx.result.author.S",
+  "timestamp": $ctx.result.timestamp.N
+}

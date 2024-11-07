@@ -1,0 +1,8 @@
+query ListMessages {
+  listMessages {
+    messageId
+    content
+    author
+    timestamp
+  }
+}

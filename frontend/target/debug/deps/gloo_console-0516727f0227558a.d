@@ -1,0 +1,10 @@
+/home/sergio/projects/rusty-chat-sync/frontend/target/debug/deps/libgloo_console-0516727f0227558a.rmeta: /home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/gloo-console-0.3.0/src/lib.rs /home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/gloo-console-0.3.0/src/console_dbg.rs /home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/gloo-console-0.3.0/src/counter.rs /home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/gloo-console-0.3.0/src/externs.rs /home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/gloo-console-0.3.0/src/macros.rs /home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/gloo-console-0.3.0/src/timer.rs
+
+/home/sergio/projects/rusty-chat-sync/frontend/target/debug/deps/gloo_console-0516727f0227558a.d: /home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/gloo-console-0.3.0/src/lib.rs /home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/gloo-console-0.3.0/src/console_dbg.rs /home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/gloo-console-0.3.0/src/counter.rs /home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/gloo-console-0.3.0/src/externs.rs /home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/gloo-console-0.3.0/src/macros.rs /home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/gloo-console-0.3.0/src/timer.rs
+
+/home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/gloo-console-0.3.0/src/lib.rs:
+/home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/gloo-console-0.3.0/src/console_dbg.rs:
+/home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/gloo-console-0.3.0/src/counter.rs:
+/home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/gloo-console-0.3.0/src/externs.rs:
+/home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/gloo-console-0.3.0/src/macros.rs:
+/home/sergio/.cargo/registry/src/index.crates.io-6f17d22bba15001f/gloo-console-0.3.0/src/timer.rs:

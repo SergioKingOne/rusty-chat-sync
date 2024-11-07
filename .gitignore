@@ -1,0 +1,18 @@
+# Rust
+/target
+**/*.rs.bk
+
+# WebAssembly
+/frontend/pkg
+
+# Terraform
+/infrastructure/.terraform/
+/infrastructure/terraform.tfstate
+/infrastructure/terraform.tfstate.backup
+
+# Logs
+*.log
+
+# OS Files
+.DS_Store
+Thumbs.db
