@@ -20,7 +20,13 @@ js-sys = "0.3"
 wasm-bindgen-test = "0.3"
 
 [lib]
+name = "rusty_chat_sync_lib"
+src = "src/lib.rs"
 crate-type = ["cdylib", "rlib"]
+
+[[bin]]
+name = "rusty_chat_sync"
+src = "src/main.rs"
 
 [profile.release]
 opt-level = "s"
