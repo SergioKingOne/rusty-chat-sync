@@ -12,7 +12,7 @@ pub fn message_list(props: &MessageListProps) -> Html {
         <div class="message-list">
             <ul>
                 { for props.messages.iter().map(|msg| html! {
-                    <li class="message-item" key={msg.messageId.clone()}>
+                    <li class="message-item" key={msg.message_id.clone()}>
                         <div class="message-header">
                             <strong>{ &msg.author }</strong>
                             <span class="timestamp">

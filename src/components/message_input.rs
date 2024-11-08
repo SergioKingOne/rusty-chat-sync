@@ -1,5 +1,6 @@
-use crate::models::message::Message;
+use crate::models::message::{Message, MessageStatus, MessageType};
 use uuid::Uuid;
+use web_sys::KeyboardEvent;
 use yew::prelude::*;
 
 #[derive(Properties, PartialEq)]
@@ -19,21 +20,38 @@ pub fn message_input(props: &MessageInputProps) -> Html {
         })
     };
 
-    let onclick = {
+    let send_message = {
         let content = content.clone();
         let on_send = props.on_send.clone();
-        Callback::from(move |_| {
+        move || {
             if !content.is_empty() {
                 let message = Message {
-                    messageId: Uuid::new_v4().to_string(),
+                    message_id: Uuid::new_v4().to_string(),
                     content: (*content).clone(),
-                    author: "User".to_string(), // Replace with authenticated user
+                    author: "User".to_string(), // TODO: Replace with actual user
+                    status: MessageStatus::Sending,
+                    message_type: MessageType::Text,
                     timestamp: js_sys::Date::now(),
                 };
                 on_send.emit(message);
                 content.set(String::new());
             }
+        }
+    };
+
+    let onkeypress = {
+        let send = send_message.clone();
+        Callback::from(move |e: KeyboardEvent| {
+            if e.key() == "Enter" && !e.shift_key() {
+                e.prevent_default();
+                send();
+            }
         })
+    };
+
+    let onclick = {
+        let send = send_message;
+        Callback::from(move |_| send())
     };
 
     html! {
@@ -42,10 +60,16 @@ pub fn message_input(props: &MessageInputProps) -> Html {
                 type="text"
                 class="message-input"
                 value={(*content).clone()}
-                oninput={oninput}
-                placeholder="Type your message..."
+                {oninput}
+                {onkeypress}
+                placeholder="Type a message and press Enter to send..."
+                autofocus=true
             />
-            <button class="send-button" onclick={onclick}>
+            <button
+                class="send-button"
+                {onclick}
+                disabled={content.is_empty()}
+            >
                 { "Send" }
             </button>
         </div>

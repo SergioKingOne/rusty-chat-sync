@@ -1,37 +1,100 @@
 use crate::components::message_input::MessageInput;
 use crate::components::message_list::MessageList;
-use crate::models::message::Message;
-use wasm_bindgen_futures;
+use crate::models::message::{Message, MessageStatus};
+use crate::state::chat_state::{ChatAction, ChatState};
 use yew::prelude::*;
 
 #[function_component(Chat)]
 pub fn chat() -> Html {
-    let messages = use_state(|| Vec::<Message>::new());
+    let chat_state = use_reducer(|| ChatState {
+        messages: Vec::new(),
+        is_loading: false,
+        error: None,
+    });
 
-    // Fetch initial messages
+    // Initialize chat
     {
-        let messages = messages.clone();
-        use_effect_with(messages, move |_messages| {
-            let future = async move {
-                // TODO: Implement fetching messages via GraphQL
-                // For example, using fetch API or a GraphQL client
-                // Update the `messages` state
-            };
-            wasm_bindgen_futures::spawn_local(future);
+        let chat_state = chat_state.clone();
+        use_effect_with(
+            (), // Run once on mount
+            move |_| {
+                let chat_state = chat_state.clone();
+                wasm_bindgen_futures::spawn_local(async move {
+                    chat_state.dispatch(ChatAction::SetLoading(true));
 
-            || ()
-        });
+                    // Initialize with a welcome message
+                    let initial_messages = vec![Message::new_system(
+                        "Welcome to Rusty Chat Sync! Start chatting below.".to_string(),
+                    )];
+
+                    chat_state.dispatch(ChatAction::SetMessages(initial_messages));
+                    chat_state.dispatch(ChatAction::SetLoading(false));
+                });
+                || ()
+            },
+        );
     }
+
+    let on_send = {
+        let chat_state = chat_state.clone();
+        Callback::from(move |msg: Message| {
+            let chat_state = chat_state.clone();
+            chat_state.dispatch(ChatAction::AddMessage(msg.clone()));
+
+            // TODO: Implement actual message sending to backend
+            wasm_bindgen_futures::spawn_local(async move {
+                // Simulate network delay for now
+                gloo::timers::future::TimeoutFuture::new(500).await;
+                chat_state.dispatch(ChatAction::UpdateMessageStatus(
+                    msg.message_id,
+                    MessageStatus::Sent,
+                ));
+            });
+        })
+    };
 
     html! {
         <div class="chat-container">
             <div class="chat-header">
-                <h1>{ "Real-time Chat" }</h1>
+                <h1>{ "Rusty Chat Sync" }</h1>
+                if chat_state.is_loading {
+                    <div class="loading-indicator">{"Loading..."}</div>
+                }
+                if let Some(error) = &chat_state.error {
+                    <div class="error-banner">
+                        {error}
+                        <button onclick={
+                            let chat_state = chat_state.clone();
+                            move |_| chat_state.dispatch(ChatAction::ClearError)
+                        }>{"✕"}</button>
+                    </div>
+                }
             </div>
-            <MessageList messages={(*messages).clone()} />
-            <MessageInput on_send={Callback::from(move |msg: Message| {
-                // TODO: Implement sending message via GraphQL mutation
-            })} />
+            <MessageList
+                messages={chat_state.messages.clone()}
+            />
+            <MessageInput {on_send} />
         </div>
     }
 }
+
+// #[cfg(test)]
+// mod tests {
+//     use super::*;
+//     use wasm_bindgen_test::*;
+
+//     wasm_bindgen_test_configure!(run_in_browser);
+
+//     #[wasm_bindgen_test]
+//     async fn test_message_flow() {
+//         use yew::platform::spawn_local;
+
+//         // Create test handle for the component
+//         let handle = yew::Renderer::<Chat>::new().render();
+
+//         // Create message and send it to component
+//         let msg = Message::new_text("Hello".to_string(), "User".to_string());
+//         handle.send_message(ChatAction::AddMessage(msg.clone()));
+
+//     }
+// }
