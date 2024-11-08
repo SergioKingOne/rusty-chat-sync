@@ -1,75 +1,91 @@
-module "cognito" {
-  source  = "terraform-aws-modules/cognito-user-pool/aws"
-  version = "~> 4.0"
-
+resource "aws_cognito_user_pool" "main" {
   name = var.cognito_user_pool_name
 
-  aliases = ["chatapp"]
+  alias_attributes = ["email"]
 
-  admin_create_user_config = {
+  admin_create_user_config {
     allow_admin_create_user_only = true
   }
 
-  password_policy = {
+  password_policy {
     minimum_length    = 8
     require_uppercase = true
     require_lowercase = true
     require_numbers   = true
     require_symbols   = true
   }
+
+  schema {
+    attribute_data_type = "String"
+    name                = "email"
+    required            = true
+    mutable             = true
+
+    string_attribute_constraints {
+      min_length = 1
+      max_length = 256
+    }
+  }
+}
+
+# Create Cognito User Pool Client
+resource "aws_cognito_user_pool_client" "client" {
+  name         = "${var.cognito_user_pool_name}-client"
+  user_pool_id = aws_cognito_user_pool.main.id
+
+  generate_secret = false
+  explicit_auth_flows = [
+    "ALLOW_USER_PASSWORD_AUTH",
+    "ALLOW_REFRESH_TOKEN_AUTH"
+  ]
 }
 
 module "dynamodb" {
-  source = "./dynamodb"
+  source              = "./dynamodb"
+  dynamodb_table_name = var.dynamodb_table_name
 }
 
+# AppSync configuration
 module "appsync" {
   source  = "terraform-aws-modules/appsync/aws"
-  version = "~> 5.0"
+  version = "2.5.1"
 
   name                = var.appsync_api_name
   authentication_type = "AMAZON_COGNITO_USER_POOLS"
 
   user_pool_config = {
-    user_pool_id   = module.cognito.user_pool_id
+    user_pool_id   = aws_cognito_user_pool.main.id
     aws_region     = var.aws_region
     default_action = "ALLOW"
-    app_id_1       = module.cognito.client_id
+    app_id_client  = aws_cognito_user_pool_client.client.id
   }
 
   schema = file("${path.module}/appsync/schema.graphql")
 
-  data_sources = [
-    {
+  datasources = {
+    "MessagesTable" = {
       type = "AMAZON_DYNAMODB"
-      name = "MessagesTable"
       dynamodb_config = {
         table_name = module.dynamodb.messages_table_name
-        aws_region = var.aws_region
+        region     = var.aws_region
       }
     }
-  ]
+  }
 
-  resolvers = [
-    {
-      type              = "Query"
-      field             = "listMessages"
+  resolvers = {
+    "Query.listMessages" = {
       data_source       = "MessagesTable"
       request_template  = file("${path.module}/appsync/resolvers/Query.listMessages.req.vtl")
       response_template = file("${path.module}/appsync/resolvers/Query.listMessages.res.vtl")
-    },
-    {
-      type              = "Mutation"
-      field             = "createMessage"
+    }
+    "Mutation.createMessage" = {
       data_source       = "MessagesTable"
       request_template  = file("${path.module}/appsync/resolvers/Mutation.createMessage.req.vtl")
       response_template = file("${path.module}/appsync/resolvers/Mutation.createMessage.res.vtl")
-    },
-    {
-      type              = "Subscription"
-      field             = "onCreateMessage"
+    }
+    "Subscription.onCreateMessage" = {
       request_template  = file("${path.module}/appsync/resolvers/Subscription.onCreateMessage.req.vtl")
       response_template = file("${path.module}/appsync/resolvers/Subscription.onCreateMessage.res.vtl")
     }
-  ]
+  }
 }
