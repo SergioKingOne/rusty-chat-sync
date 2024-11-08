@@ -7,9 +7,9 @@ dist
 /frontend/pkg
 
 # Terraform
-/infrastructure/.terraform/
-/infrastructure/terraform.tfstate
-/infrastructure/terraform.tfstate.backup
+/terraform/.terraform/
+/terraform/terraform.tfstate
+/terraform/terraform.tfstate.backup
 
 # Logs
 *.log
