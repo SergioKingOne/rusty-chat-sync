@@ -9,14 +9,28 @@ pub struct MessageListProps {
 #[function_component(MessageList)]
 pub fn message_list(props: &MessageListProps) -> Html {
     html! {
-        <ul>
-            { for props.messages.iter().map(|msg| html! {
-                <li class="message-item" key="{msg.messageId.clone()}">
-                    <div class="message-content">
-                        <strong>{ &msg.author }</strong>{": "}{ &msg.content }
-                    </div>
-                </li>
-            }) }
-        </ul>
+        <div class="message-list">
+            <ul>
+                { for props.messages.iter().map(|msg| html! {
+                    <li class="message-item" key={msg.messageId.clone()}>
+                        <div class="message-header">
+                            <strong>{ &msg.author }</strong>
+                            <span class="timestamp">
+                                { format_timestamp(msg.timestamp) }
+                            </span>
+                        </div>
+                        <div class="message-content">
+                            { &msg.content }
+                        </div>
+                    </li>
+                }) }
+            </ul>
+        </div>
     }
+}
+
+fn format_timestamp(timestamp: f64) -> String {
+    // You might want to add the chrono crate for better date formatting
+    let date = js_sys::Date::new(&timestamp.into());
+    date.to_locale_time_string("en-US").into()
 }

@@ -37,9 +37,17 @@ pub fn message_input(props: &MessageInputProps) -> Html {
     };
 
     html! {
-        <div>
-            <input type="text" value={(*content).clone()} oninput={oninput} placeholder="Type your message..." />
-            <button onclick={onclick}>{ "Send" }</button>
+        <div class="message-input-container">
+            <input
+                type="text"
+                class="message-input"
+                value={(*content).clone()}
+                oninput={oninput}
+                placeholder="Type your message..."
+            />
+            <button class="send-button" onclick={onclick}>
+                { "Send" }
+            </button>
         </div>
     }
 }

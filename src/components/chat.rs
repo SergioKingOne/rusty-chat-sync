@@ -24,8 +24,10 @@ pub fn chat() -> Html {
     }
 
     html! {
-        <div>
-            <h1>{ "Real-time Chat Application" }</h1>
+        <div class="chat-container">
+            <div class="chat-header">
+                <h1>{ "Real-time Chat" }</h1>
+            </div>
             <MessageList messages={(*messages).clone()} />
             <MessageInput on_send={Callback::from(move |msg: Message| {
                 // TODO: Implement sending message via GraphQL mutation
