@@ -1,9 +1,13 @@
 use serde::{Deserialize, Serialize};
+use strum_macros::Display;
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Display)]
 pub enum MessageStatus {
+    #[strum(serialize = "sending")]
     Sending,
+    #[strum(serialize = "sent")]
     Sent,
+    #[strum(serialize = "failed")]
     Failed,
 }
 
