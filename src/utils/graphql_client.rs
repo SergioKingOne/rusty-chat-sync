@@ -1,3 +1,4 @@
+use crate::utils::config::CONFIG;
 use aws_config::meta::region::RegionProviderChain;
 use aws_sdk_cognitoidentityprovider::Client as CognitoClient;
 use graphql_client::Response;
@@ -23,9 +24,7 @@ impl GraphQLClient {
 
         Ok(Self {
             http_client,
-            endpoint: String::from(
-                "https://4psoayuvcnfu7ekadjzgs6erli.appsync-api.us-east-1.amazonaws.com/graphql",
-            ),
+            endpoint: CONFIG.graphql_endpoint.clone(),
             cognito_client,
         })
     }
