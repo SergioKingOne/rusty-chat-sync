@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 use strum_macros::Display;
 
+use crate::graphql::queries::list_messages;
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Display)]
 pub enum MessageStatus {
     #[strum(serialize = "sending")]
@@ -48,6 +50,19 @@ impl Message {
             timestamp: js_sys::Date::now(),
             status: MessageStatus::Sent,
             message_type: MessageType::System,
+        }
+    }
+}
+
+impl From<list_messages::ListMessagesListMessages> for Message {
+    fn from(gql_msg: list_messages::ListMessagesListMessages) -> Self {
+        Self {
+            message_id: gql_msg.message_id,
+            content: gql_msg.content,
+            author: gql_msg.author,
+            timestamp: gql_msg.timestamp,
+            status: MessageStatus::Sent,
+            message_type: MessageType::Text,
         }
     }
 }

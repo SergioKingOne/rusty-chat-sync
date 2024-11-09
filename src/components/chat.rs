@@ -1,7 +1,7 @@
 use crate::components::message_input::MessageInput;
 use crate::components::message_list::MessageList;
 use crate::graphql::mutations::CreateMessage;
-use crate::graphql::queries::ListMessages;
+use crate::graphql::queries::list_messages;
 use crate::models::message::{Message, MessageStatus};
 use crate::state::chat_state::{ChatAction, ChatState};
 use crate::utils::graphql_client::GraphQLClient;
@@ -27,16 +27,19 @@ pub fn chat() -> Html {
 
                     match GraphQLClient::new().await {
                         Ok(client) => {
-                            // Fetch existing messages
+                            let variables = list_messages::Variables {};
                             match client
-                                .query::<ListMessages, _>(ListMessages::Variables {})
+                                .execute_query::<list_messages::ResponseData>(
+                                    list_messages::OPERATION_NAME,
+                                    list_messages::QUERY,
+                                    serde_json::to_value(variables).unwrap(),
+                                )
                                 .await
                             {
                                 Ok(response) => {
-                                    if let Some(messages) = response.data {
+                                    if let Some(data) = response.data {
                                         chat_state.dispatch(ChatAction::SetMessages(
-                                            messages
-                                                .list_messages
+                                            data.list_messages
                                                 .into_iter()
                                                 .map(|m| Message::from(m))
                                                 .collect(),

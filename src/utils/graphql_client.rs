@@ -1,6 +1,6 @@
 use aws_config::meta::region::RegionProviderChain;
 use aws_sdk_cognitoidentityprovider::Client as CognitoClient;
-use graphql_client::{GraphQLQuery, Response};
+use graphql_client::Response;
 use reqwest::Client as ReqwestClient;
 use serde::de::DeserializeOwned;
 
@@ -30,13 +30,18 @@ impl GraphQLClient {
         })
     }
 
-    pub async fn query<Q: GraphQLQuery, R: DeserializeOwned>(
+    pub async fn execute_query<T: DeserializeOwned>(
         &self,
-        variables: Q::Variables,
-    ) -> Result<Response<R>, Box<dyn std::error::Error>> {
-        let request_body = Q::build_query(variables);
+        operation_name: &str,
+        query: &str,
+        variables: serde_json::Value,
+    ) -> Result<Response<T>, Box<dyn std::error::Error>> {
+        let request_body = serde_json::json!({
+            "operationName": operation_name,
+            "query": query,
+            "variables": variables,
+        });
 
-        // TODO: Add authentication token to headers
         let response = self
             .http_client
             .post(&self.endpoint)
@@ -46,7 +51,7 @@ impl GraphQLClient {
             .await?;
 
         let response_body = response.text().await?;
-        let response: Response<R> = serde_json::from_str(&response_body)?;
+        let response: Response<T> = serde_json::from_str(&response_body)?;
         Ok(response)
     }
 
