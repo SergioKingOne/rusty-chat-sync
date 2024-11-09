@@ -1,7 +1,10 @@
 use crate::components::message_input::MessageInput;
 use crate::components::message_list::MessageList;
+use crate::graphql::mutations::CreateMessage;
+use crate::graphql::queries::ListMessages;
 use crate::models::message::{Message, MessageStatus};
 use crate::state::chat_state::{ChatAction, ChatState};
+use crate::utils::graphql_client::GraphQLClient;
 use yew::prelude::*;
 
 #[function_component(Chat)]
@@ -22,12 +25,34 @@ pub fn chat() -> Html {
                 wasm_bindgen_futures::spawn_local(async move {
                     chat_state.dispatch(ChatAction::SetLoading(true));
 
-                    // Initialize with a welcome message
-                    let initial_messages = vec![Message::new_system(
-                        "Welcome to Rusty Chat Sync! Start chatting below.".to_string(),
-                    )];
+                    match GraphQLClient::new().await {
+                        Ok(client) => {
+                            // Fetch existing messages
+                            match client
+                                .query::<ListMessages, _>(ListMessages::Variables {})
+                                .await
+                            {
+                                Ok(response) => {
+                                    if let Some(messages) = response.data {
+                                        chat_state.dispatch(ChatAction::SetMessages(
+                                            messages
+                                                .list_messages
+                                                .into_iter()
+                                                .map(|m| Message::from(m))
+                                                .collect(),
+                                        ));
+                                    }
+                                }
+                                Err(e) => {
+                                    chat_state.dispatch(ChatAction::SetError(e.to_string()));
+                                }
+                            }
+                        }
+                        Err(e) => {
+                            chat_state.dispatch(ChatAction::SetError(e.to_string()));
+                        }
+                    }
 
-                    chat_state.dispatch(ChatAction::SetMessages(initial_messages));
                     chat_state.dispatch(ChatAction::SetLoading(false));
                 });
                 || ()
