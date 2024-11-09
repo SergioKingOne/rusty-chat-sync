@@ -3,8 +3,14 @@ output "appsync_api_id" {
   value       = module.appsync.appsync_graphql_api_id
 }
 
-output "debug_appsync" {
-  value = module.appsync
+output "appsync_graphql_endpoint" {
+  description = "AppSync GraphQL API endpoint"
+  value       = module.appsync.appsync_graphql_api_uris["GRAPHQL"]
+}
+
+output "appsync_realtime_endpoint" {
+  description = "AppSync WebSocket endpoint for real-time subscriptions"
+  value       = module.appsync.appsync_graphql_api_uris["REALTIME"]
 }
 
 output "cognito_user_pool_id" {
@@ -15,4 +21,9 @@ output "cognito_user_pool_id" {
 output "cognito_client_id" {
   description = "Cognito App Client ID"
   value       = aws_cognito_user_pool_client.client.id
+}
+
+output "dynamodb_table_name" {
+  description = "DynamoDB table name for messages"
+  value       = module.dynamodb.messages_table_name
 }
