@@ -17,6 +17,9 @@ web-sys = "0.3"
 js-sys = "0.3"
 strum_macros = "0.26.4"
 chrono = { version = "0.4", features = ["serde"] }
+dotenv = "0.15"
+lazy_static = "1.4"
+env_logger = "0.11"
 
 aws-config = "1.5.10"
 aws-sdk-appsync = "1.56.0"
