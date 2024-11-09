@@ -24,3 +24,8 @@ output "messages_table_name" {
   description = "Name of the DynamoDB messages table"
   value       = aws_dynamodb_table.messages.name
 }
+
+output "messages_table_arn" {
+  description = "ARN of the DynamoDB messages table"
+  value       = aws_dynamodb_table.messages.arn
+}

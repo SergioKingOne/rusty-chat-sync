@@ -69,6 +69,10 @@ module "appsync" {
         table_name = module.dynamodb.messages_table_name
         region     = var.aws_region
       }
+      service_role_arn    = aws_iam_role.dynamodb_role.arn
+      region              = var.aws_region
+      table_name          = module.dynamodb.messages_table_name
+      create_service_role = false # Since we're using our custom role
     }
   }
 
@@ -84,8 +88,52 @@ module "appsync" {
       response_template = file("${path.module}/appsync/resolvers/Mutation.createMessage.res.vtl")
     }
     "Subscription.onCreateMessage" = {
+      data_source       = "MessagesTable"
       request_template  = file("${path.module}/appsync/resolvers/Subscription.onCreateMessage.req.vtl")
       response_template = file("${path.module}/appsync/resolvers/Subscription.onCreateMessage.res.vtl")
     }
   }
+}
+
+resource "aws_iam_role" "dynamodb_role" {
+  name = "appsync-dynamodb-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "appsync.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "dynamodb_policy" {
+  name = "appsync-dynamodb-policy"
+  role = aws_iam_role.dynamodb_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "dynamodb:GetItem",
+          "dynamodb:PutItem",
+          "dynamodb:DeleteItem",
+          "dynamodb:UpdateItem",
+          "dynamodb:Query",
+          "dynamodb:Scan"
+        ]
+        Resource = [
+          module.dynamodb.messages_table_arn,
+          "${module.dynamodb.messages_table_arn}/*"
+        ]
+      }
+    ]
+  })
 }
