@@ -2,63 +2,76 @@ use crate::components::message_input::MessageInput;
 use crate::components::message_list::MessageList;
 use crate::graphql::queries::{ListMessagesResponse, LIST_MESSAGES_QUERY};
 use crate::models::message::{Message, MessageStatus};
+use crate::state::auth_state::AuthState;
 use crate::state::chat_state::{ChatAction, ChatState};
 use crate::utils::graphql_client::GraphQLClient;
 use yew::prelude::*;
 
 #[function_component(Chat)]
 pub fn chat() -> Html {
+    let auth_state = use_reducer(|| AuthState {
+        is_authenticated: false,
+        token: None,
+        user_id: None,
+        error: None,
+    });
+
     let chat_state = use_reducer(|| ChatState {
         messages: Vec::new(),
         is_loading: false,
         error: None,
     });
 
-    // Initialize chat
+    // Initialize chat when authenticated
     {
         let chat_state = chat_state.clone();
-        use_effect_with((), move |_| {
-            let chat_state = chat_state.clone();
-            wasm_bindgen_futures::spawn_local(async move {
-                chat_state.dispatch(ChatAction::SetLoading(true));
+        let auth_state = auth_state.clone();
+        use_effect_with(auth_state.is_authenticated, move |_| {
+            if auth_state.is_authenticated {
+                let chat_state = chat_state.clone();
+                let token = auth_state.token.clone().unwrap();
+                wasm_bindgen_futures::spawn_local(async move {
+                    chat_state.dispatch(ChatAction::SetLoading(true));
 
-                match GraphQLClient::new().await {
-                    Ok(client) => {
-                        let result = client
-                            .execute_query::<_, ListMessagesResponse>(
-                                "ListMessages",
-                                LIST_MESSAGES_QUERY,
-                                serde_json::json!({}),
-                            )
-                            .await;
+                    match GraphQLClient::new().await {
+                        Ok(client) => {
+                            let client = client.with_token(token);
+                            let result = client
+                                .execute_query::<_, ListMessagesResponse>(
+                                    "ListMessages",
+                                    LIST_MESSAGES_QUERY,
+                                    serde_json::json!({}),
+                                )
+                                .await;
 
-                        match result {
-                            Ok(response) => {
-                                if let Some(data) = response.data {
-                                    chat_state.dispatch(ChatAction::SetMessages(
-                                        data.list_messages
-                                            .into_iter()
-                                            .map(Message::from_message_data)
-                                            .collect(),
-                                    ));
-                                } else if let Some(errors) = response.errors {
-                                    chat_state
-                                        .dispatch(ChatAction::SetError(errors[0].message.clone()));
+                            match result {
+                                Ok(response) => {
+                                    if let Some(data) = response.data {
+                                        chat_state.dispatch(ChatAction::SetMessages(
+                                            data.list_messages
+                                                .into_iter()
+                                                .map(Message::from_message_data)
+                                                .collect(),
+                                        ));
+                                    } else if let Some(errors) = response.errors {
+                                        chat_state.dispatch(ChatAction::SetError(
+                                            errors[0].message.clone(),
+                                        ));
+                                    }
+                                }
+                                Err(e) => {
+                                    chat_state.dispatch(ChatAction::SetError(e.to_string()));
                                 }
                             }
-                            Err(e) => {
-                                chat_state.dispatch(ChatAction::SetError(e.to_string()));
-                            }
+                        }
+                        Err(e) => {
+                            chat_state.dispatch(ChatAction::SetError(e.to_string()));
                         }
                     }
-                    Err(e) => {
-                        chat_state.dispatch(ChatAction::SetError(e.to_string()));
-                    }
-                }
 
-                chat_state.dispatch(ChatAction::SetLoading(false));
-            });
-
+                    chat_state.dispatch(ChatAction::SetLoading(false));
+                });
+            }
             || ()
         });
     }
@@ -83,25 +96,32 @@ pub fn chat() -> Html {
 
     html! {
         <div class="chat-container">
-            <div class="chat-header">
-                <h1>{ "Rusty Chat Sync" }</h1>
-                if chat_state.is_loading {
-                    <div class="loading-indicator">{"Loading..."}</div>
-                }
-                if let Some(error) = &chat_state.error {
-                    <div class="error-banner">
-                        {error}
-                        <button onclick={
-                            let chat_state = chat_state.clone();
-                            move |_| chat_state.dispatch(ChatAction::ClearError)
-                        }>{"✕"}</button>
-                    </div>
-                }
-            </div>
-            <MessageList
-                messages={chat_state.messages.clone()}
-            />
-            <MessageInput {on_send} />
+            if !auth_state.is_authenticated {
+                <div class="login-container">
+                    // TODO: Add login form component
+                    <h2>{"Please log in"}</h2>
+                </div>
+            } else {
+                <div class="chat-header">
+                    <h1>{ "Rusty Chat Sync" }</h1>
+                    if chat_state.is_loading {
+                        <div class="loading-indicator">{"Loading..."}</div>
+                    }
+                    if let Some(error) = &chat_state.error {
+                        <div class="error-banner">
+                            {error}
+                            <button onclick={
+                                let chat_state = chat_state.clone();
+                                move |_| chat_state.dispatch(ChatAction::ClearError)
+                            }>{"✕"}</button>
+                        </div>
+                    }
+                </div>
+                <MessageList
+                    messages={chat_state.messages.clone()}
+                />
+                <MessageInput {on_send} />
+            }
         </div>
     }
 }
