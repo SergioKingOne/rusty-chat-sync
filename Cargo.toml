@@ -4,40 +4,57 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+# Web/WASM dependencies
 yew = { version = "0.21.0", features = ["csr"] }
-yew-router = "0.18.0"
+wasm-bindgen = "0.2"
+web-sys = { version = "0.3", features = [
+    "HtmlElement",
+    "Window",
+    "Document",
+    "Headers",
+    "Request",
+    "RequestInit",
+    "RequestMode",
+    "Response",
+    "Storage",
+] }
+gloo = { version = "0.11.0", features = [
+    "timers",
+    "storage",
+    "net",
+    "futures",
+] }
+wasm-bindgen-futures = "0.4"
+js-sys = "0.3"
+
+# Serialization
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-wasm-bindgen = "0.2"
-gloo = { version = "0.11.0", features = ["timers", "net"] }
-graphql_client = "0.14"
-uuid = { version = "1.1", features = ["v4"] }
-wasm-bindgen-futures = "0.4"
-web-sys = "0.3"
-js-sys = "0.3"
-strum_macros = "0.26.4"
-chrono = { version = "0.4", features = ["serde"] }
+
+# Utils
+uuid = { version = "1.1", features = ["v4", "js"] }
+chrono = { version = "0.4", features = ["wasmbind"] }
+strum_macros = "0.26"
 dotenv = "0.15"
 lazy_static = "1.4"
-env_logger = "0.11"
 
-aws-config = "1.5.10"
-aws-sdk-appsync = "1.56.0"
-aws-sdk-cognitoidentityprovider = "1.56.0"
-aws-smithy-types = "1.2.9"
-reqwest = "0.12.0"
+# HTTP client with WASM support
+reqwest = { version = "0.12.9", features = ["json"] }
+
+# Environment
+env_logger = "0.11"
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3"
 
 [lib]
 name = "rusty_chat_sync_lib"
-src = "src/lib.rs"
+path = "src/lib.rs"
 crate-type = ["cdylib", "rlib"]
 
 [[bin]]
 name = "rusty_chat_sync"
-src = "src/main.rs"
+path = "src/main.rs"
 
 [profile.release]
 opt-level = "s"
