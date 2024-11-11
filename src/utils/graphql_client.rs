@@ -1,11 +1,11 @@
 use crate::graphql::types::{GraphQLRequest, GraphQLResponse};
-use crate::utils::config::CONFIG;
 use reqwest::Client as ReqwestClient;
 use serde::{de::DeserializeOwned, Serialize};
 
 pub struct GraphQLClient {
     http_client: ReqwestClient,
     endpoint: String,
+    auth_token: Option<String>,
 }
 
 impl GraphQLClient {
@@ -14,8 +14,16 @@ impl GraphQLClient {
 
         Ok(Self {
             http_client,
-            endpoint: CONFIG.graphql_endpoint.clone(),
+            endpoint: String::from(
+                "https://4psoayuvcnfu7ekadjzgs6erli.appsync-api.us-east-1.amazonaws.com/graphql",
+            ),
+            auth_token: None,
         })
+    }
+
+    pub fn with_token(mut self, token: String) -> Self {
+        self.auth_token = Some(token);
+        self
     }
 
     pub async fn execute_query<V, T>(
@@ -34,14 +42,17 @@ impl GraphQLClient {
             operation_name: operation_name.to_string(),
         };
 
-        let response = self
+        let mut request = self
             .http_client
             .post(&self.endpoint)
-            .header("Content-Type", "application/json")
-            .json(&request_body)
-            .send()
-            .await?;
+            .header("Content-Type", "application/json");
 
+        if let Some(token) = &self.auth_token {
+            request = request.header("Authorization", token);
+        }
+
+        let response = request.json(&request_body).send().await?;
+        println!("Response: {:?}", response);
         let response_body = response.json().await?;
         Ok(response_body)
     }
