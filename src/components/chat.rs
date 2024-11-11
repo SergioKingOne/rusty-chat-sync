@@ -1,8 +1,9 @@
+use crate::components::login::Login;
 use crate::components::message_input::MessageInput;
 use crate::components::message_list::MessageList;
 use crate::graphql::queries::{ListMessagesResponse, LIST_MESSAGES_QUERY};
 use crate::models::message::{Message, MessageStatus};
-use crate::state::auth_state::AuthState;
+use crate::state::auth_state::{AuthAction, AuthState};
 use crate::state::chat_state::{ChatAction, ChatState};
 use crate::utils::graphql_client::GraphQLClient;
 use yew::prelude::*;
@@ -97,22 +98,31 @@ pub fn chat() -> Html {
     html! {
         <div class="chat-container">
             if !auth_state.is_authenticated {
-                <div class="login-container">
-                    // TODO: Add login form component
-                    <h2>{"Please log in"}</h2>
-                </div>
+                <Login auth_state={auth_state.clone()} />
             } else {
                 <div class="chat-header">
                     <h1>{ "Rusty Chat Sync" }</h1>
+                    <button
+                        onclick={
+                            let auth_state = auth_state.clone();
+                            Callback::from(move |_| {
+                                auth_state.dispatch(AuthAction::Logout);
+                            })
+                        }
+                        class="logout-button"
+                    >
+                        {"Logout"}
+                    </button>
                     if chat_state.is_loading {
                         <div class="loading-indicator">{"Loading..."}</div>
                     }
                     if let Some(error) = &chat_state.error {
                         <div class="error-banner">
                             {error}
-                            <button onclick={
-                                let chat_state = chat_state.clone();
-                                move |_| chat_state.dispatch(ChatAction::ClearError)
+                            <button
+                                onclick={
+                                    let chat_state = chat_state.clone();
+                                    move |_| chat_state.dispatch(ChatAction::ClearError)
                             }>{"✕"}</button>
                         </div>
                     }
