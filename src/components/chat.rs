@@ -1,7 +1,6 @@
 use crate::components::message_input::MessageInput;
 use crate::components::message_list::MessageList;
-use crate::graphql::mutations::CreateMessage;
-use crate::graphql::queries::list_messages;
+use crate::graphql::queries::{ListMessagesResponse, LIST_MESSAGES_QUERY};
 use crate::models::message::{Message, MessageStatus};
 use crate::state::chat_state::{ChatAction, ChatState};
 use crate::utils::graphql_client::GraphQLClient;
@@ -18,49 +17,50 @@ pub fn chat() -> Html {
     // Initialize chat
     {
         let chat_state = chat_state.clone();
-        use_effect_with(
-            (), // Run once on mount
-            move |_| {
-                let chat_state = chat_state.clone();
-                wasm_bindgen_futures::spawn_local(async move {
-                    chat_state.dispatch(ChatAction::SetLoading(true));
+        use_effect_with((), move |_| {
+            let chat_state = chat_state.clone();
+            wasm_bindgen_futures::spawn_local(async move {
+                chat_state.dispatch(ChatAction::SetLoading(true));
 
-                    match GraphQLClient::new().await {
-                        Ok(client) => {
-                            let variables = list_messages::Variables {};
-                            match client
-                                .execute_query::<list_messages::ResponseData>(
-                                    list_messages::OPERATION_NAME,
-                                    list_messages::QUERY,
-                                    serde_json::to_value(variables).unwrap(),
-                                )
-                                .await
-                            {
-                                Ok(response) => {
-                                    if let Some(data) = response.data {
-                                        chat_state.dispatch(ChatAction::SetMessages(
-                                            data.list_messages
-                                                .into_iter()
-                                                .map(|m| Message::from(m))
-                                                .collect(),
-                                        ));
-                                    }
-                                }
-                                Err(e) => {
-                                    chat_state.dispatch(ChatAction::SetError(e.to_string()));
+                match GraphQLClient::new().await {
+                    Ok(client) => {
+                        let result = client
+                            .execute_query::<_, ListMessagesResponse>(
+                                "ListMessages",
+                                LIST_MESSAGES_QUERY,
+                                serde_json::json!({}),
+                            )
+                            .await;
+
+                        match result {
+                            Ok(response) => {
+                                if let Some(data) = response.data {
+                                    chat_state.dispatch(ChatAction::SetMessages(
+                                        data.list_messages
+                                            .into_iter()
+                                            .map(Message::from_message_data)
+                                            .collect(),
+                                    ));
+                                } else if let Some(errors) = response.errors {
+                                    chat_state
+                                        .dispatch(ChatAction::SetError(errors[0].message.clone()));
                                 }
                             }
-                        }
-                        Err(e) => {
-                            chat_state.dispatch(ChatAction::SetError(e.to_string()));
+                            Err(e) => {
+                                chat_state.dispatch(ChatAction::SetError(e.to_string()));
+                            }
                         }
                     }
+                    Err(e) => {
+                        chat_state.dispatch(ChatAction::SetError(e.to_string()));
+                    }
+                }
 
-                    chat_state.dispatch(ChatAction::SetLoading(false));
-                });
-                || ()
-            },
-        );
+                chat_state.dispatch(ChatAction::SetLoading(false));
+            });
+
+            || ()
+        });
     }
 
     let on_send = {
