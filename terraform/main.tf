@@ -3,6 +3,18 @@ resource "aws_cognito_user_pool" "main" {
 
   alias_attributes = ["email"]
 
+  auto_verified_attributes = ["email"]
+
+  verification_message_template {
+    default_email_option = "CONFIRM_WITH_CODE"
+    email_subject        = "Your verification code"
+    email_message        = "Your verification code is {####}"
+  }
+
+  email_configuration {
+    email_sending_account = "COGNITO_DEFAULT"
+  }
+
   admin_create_user_config {
     allow_admin_create_user_only = false
   }
