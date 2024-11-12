@@ -7,6 +7,7 @@ use yew::prelude::*;
 #[derive(Properties, PartialEq)]
 pub struct LoginProps {
     pub auth_state: UseReducerHandle<AuthState>,
+    pub on_switch_to_signup: Callback<()>,
 }
 
 #[function_component(Login)]
@@ -90,6 +91,17 @@ pub fn login(props: &LoginProps) -> Html {
                     }
                 </button>
             </form>
+            <div class="auth-switch">
+                {"Don't have an account? "}
+                <button
+                    type="button"
+                    class="link-button"
+                    onclick={let cb = props.on_switch_to_signup.clone(); move |_| cb.emit(())}
+                    disabled={*is_loading}
+                >
+                    {"Sign Up"}
+                </button>
+            </div>
         </div>
     }
 }

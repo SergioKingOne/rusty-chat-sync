@@ -1,6 +1,7 @@
 use crate::components::login::Login;
 use crate::components::message_input::MessageInput;
 use crate::components::message_list::MessageList;
+use crate::components::signup::SignUp;
 use crate::graphql::queries::{ListMessagesResponse, LIST_MESSAGES_QUERY};
 use crate::models::message::{Message, MessageStatus};
 use crate::state::auth_state::{AuthAction, AuthState};
@@ -22,6 +23,8 @@ pub fn chat() -> Html {
         is_loading: false,
         error: None,
     });
+
+    let show_signup = use_state(|| false);
 
     // Initialize chat when authenticated
     {
@@ -98,7 +101,23 @@ pub fn chat() -> Html {
     html! {
         <div class="chat-container">
             if !auth_state.is_authenticated {
-                <Login auth_state={auth_state.clone()} />
+                if *show_signup {
+                    <SignUp
+                        auth_state={auth_state.clone()}
+                        on_switch_to_login={
+                            let show_signup = show_signup.clone();
+                            Callback::from(move |_| show_signup.set(false))
+                        }
+                    />
+                } else {
+                    <Login
+                        auth_state={auth_state.clone()}
+                        on_switch_to_signup={
+                            let show_signup = show_signup.clone();
+                            Callback::from(move |_| show_signup.set(true))
+                        }
+                    />
+                }
             } else {
                 <div class="chat-header">
                     <h1>{ "Rusty Chat Sync" }</h1>

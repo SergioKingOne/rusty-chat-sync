@@ -2,7 +2,7 @@ use gloo::net::http::Request;
 use gloo::storage::{LocalStorage, Storage};
 use serde::{Deserialize, Serialize};
 
-const USER_POOL_ID: &str = "us-east-1_4oNrl079E";
+// const USER_POOL_ID: &str = "us-east-1_4oNrl079E";
 const CLIENT_ID: &str = "p7c55gqav2r7633fgqfbh0rcs";
 const AUTH_ENDPOINT: &str = "https://cognito-idp.us-east-1.amazonaws.com";
 const STORAGE_KEY: &str = "auth_tokens";
@@ -29,6 +29,26 @@ struct AuthParameters {
     username: String,
     #[serde(rename = "PASSWORD")]
     password: String,
+}
+
+#[derive(Debug, Serialize)]
+struct SignUpRequest {
+    #[serde(rename = "ClientId")]
+    client_id: String,
+    #[serde(rename = "Username")]
+    username: String,
+    #[serde(rename = "Password")]
+    password: String,
+    #[serde(rename = "UserAttributes")]
+    user_attributes: Vec<UserAttribute>,
+}
+
+#[derive(Debug, Serialize)]
+struct UserAttribute {
+    #[serde(rename = "Name")]
+    name: String,
+    #[serde(rename = "Value")]
+    value: String,
 }
 
 pub struct AuthService;
@@ -74,6 +94,46 @@ impl AuthService {
                 .await
                 .map_err(|e| format!("Failed to get error text: {}", e))?;
             Err(format!("Authentication failed: {}", error_text))
+        }
+    }
+
+    pub async fn sign_up(
+        &self,
+        username: String,
+        password: String,
+        email: String,
+    ) -> Result<(), String> {
+        let sign_up_request = SignUpRequest {
+            client_id: CLIENT_ID.to_string(),
+            username: username.clone(),
+            password: password.clone(),
+            user_attributes: vec![UserAttribute {
+                name: "email".to_string(),
+                value: email,
+            }],
+        };
+
+        let response = Request::post(AUTH_ENDPOINT)
+            .header("X-Amz-Target", "AWSCognitoIdentityProviderService.SignUp")
+            .header("Content-Type", "application/x-amz-json-1.1")
+            .json(&sign_up_request)
+            .map_err(|e| e.to_string())?
+            .send()
+            .await
+            .map_err(|e| e.to_string())?;
+
+        if response.ok() {
+            // Since auto-confirm is enabled, we can immediately log the user in
+            match self.login(username, password).await {
+                Ok(_) => Ok(()),
+                Err(e) => Err(format!("Sign up successful but login failed: {}", e)),
+            }
+        } else {
+            let error_text = response
+                .text()
+                .await
+                .map_err(|e| format!("Failed to get error text: {}", e))?;
+            Err(format!("Sign up failed: {}", error_text))
         }
     }
 

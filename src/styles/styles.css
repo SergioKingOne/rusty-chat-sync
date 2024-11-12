@@ -315,3 +315,31 @@ body {
   background: #cbd5e0;
   cursor: not-allowed;
 }
+
+.auth-switch {
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.link-button {
+  background: none;
+  border: none;
+  color: var(--secondary-color);
+  cursor: pointer;
+  font-weight: 500;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.link-button:hover {
+  color: #2980b9;
+}
+
+.signup-container {
+  max-width: 400px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: white;
+  border-radius: 8px;
+  box-shadow: var(--shadow-md);
+}
