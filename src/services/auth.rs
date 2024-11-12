@@ -3,10 +3,13 @@ use gloo::net::http::Request;
 use gloo::storage::{LocalStorage, Storage};
 use serde::{Deserialize, Serialize};
 
-// const USER_POOL_ID: &str = "us-east-1_4oNrl079E";
 const CLIENT_ID: &str = "p7c55gqav2r7633fgqfbh0rcs";
 const AUTH_ENDPOINT: &str = "https://cognito-idp.us-east-1.amazonaws.com";
 const STORAGE_KEY: &str = "auth_tokens";
+const CONTENT_TYPE: &str = "application/x-amz-json-1.1";
+const AUTH_FLOW: &str = "USER_PASSWORD_AUTH";
+const TARGET_INITIATE_AUTH: &str = "AWSCognitoIdentityProviderService.InitiateAuth";
+const TARGET_SIGN_UP: &str = "AWSCognitoIdentityProviderService.SignUp";
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct AuthResponse {
@@ -39,12 +42,10 @@ struct SignUpResponse {
 }
 
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "PascalCase")]
 struct AuthRequest {
-    #[serde(rename = "AuthFlow")]
     auth_flow: String,
-    #[serde(rename = "ClientId")]
     client_id: String,
-    #[serde(rename = "AuthParameters")]
     auth_parameters: AuthParameters,
 }
 
@@ -85,20 +86,22 @@ impl AuthService {
 
     pub async fn login(&self, username: String, password: String) -> Result<AuthResponse, String> {
         let auth_request = AuthRequest {
-            auth_flow: "USER_PASSWORD_AUTH".to_string(),
+            auth_flow: AUTH_FLOW.to_string(),
             client_id: CLIENT_ID.to_string(),
             auth_parameters: AuthParameters { username, password },
         };
 
-        log!("Sending login request");
+        // Convert to string manually to match the exact format
+        let request_body = serde_json::to_string(&auth_request)
+            .map_err(|e| format!("Failed to serialize request: {}", e))?;
+
+        log!("Login request body:", &request_body);
 
         let response = Request::post(AUTH_ENDPOINT)
-            .header(
-                "X-Amz-Target",
-                "AWSCognitoIdentityProviderService.InitiateAuth",
-            )
-            .header("Content-Type", "application/x-amz-json-1.1")
-            .json(&auth_request)
+            .header("X-Amz-Target", TARGET_INITIATE_AUTH)
+            .header("Content-Type", CONTENT_TYPE)
+            .header("Accept", "*/*")
+            .body(request_body)
             .map_err(|e| e.to_string())?
             .send()
             .await
@@ -154,9 +157,9 @@ impl AuthService {
         log!("Request body:", &request_body);
 
         // Simplify the request to match the working curl version
-        let response = Request::post("https://cognito-idp.us-east-1.amazonaws.com/")
-            .header("X-Amz-Target", "AWSCognitoIdentityProviderService.SignUp")
-            .header("Content-Type", "application/x-amz-json-1.1")
+        let response = Request::post(AUTH_ENDPOINT)
+            .header("X-Amz-Target", TARGET_SIGN_UP)
+            .header("Content-Type", CONTENT_TYPE)
             .header("Accept", "*/*")
             .body(request_body) // Use body() instead of json() to have more control
             .map_err(|e| e.to_string())?
