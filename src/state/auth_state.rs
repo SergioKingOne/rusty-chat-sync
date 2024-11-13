@@ -1,6 +1,8 @@
 use std::rc::Rc;
 use yew::prelude::*;
 
+use crate::services::auth::AuthService;
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct AuthState {
     pub is_authenticated: bool,
@@ -36,6 +38,7 @@ impl Reducible for AuthState {
                 next_state.error = None;
             }
             AuthAction::Logout => {
+                AuthService::logout();
                 next_state.is_authenticated = false;
                 next_state.token = None;
                 next_state.user_id = None;

@@ -4,6 +4,7 @@ use crate::components::message_list::MessageList;
 use crate::components::signup::SignUp;
 use crate::graphql::queries::{ListMessagesResponse, LIST_MESSAGES_QUERY};
 use crate::models::message::{Message, MessageStatus};
+use crate::services::auth::AuthService;
 use crate::state::auth_state::{AuthAction, AuthState};
 use crate::state::chat_state::{ChatAction, ChatState};
 use crate::utils::graphql_client::GraphQLClient;
@@ -11,11 +12,23 @@ use yew::prelude::*;
 
 #[function_component(Chat)]
 pub fn chat() -> Html {
-    let auth_state = use_reducer(|| AuthState {
-        is_authenticated: false,
-        token: None,
-        user_id: None,
-        error: None,
+    let auth_state = use_reducer(|| {
+        // Check for stored auth on initial load
+        if let Some(stored_auth) = AuthService::get_stored_auth() {
+            AuthState {
+                is_authenticated: true,
+                token: Some(stored_auth.id_token),
+                user_id: Some(stored_auth.access_token),
+                error: None,
+            }
+        } else {
+            AuthState {
+                is_authenticated: false,
+                token: None,
+                user_id: None,
+                error: None,
+            }
+        }
     });
 
     let chat_state = use_reducer(|| ChatState {
