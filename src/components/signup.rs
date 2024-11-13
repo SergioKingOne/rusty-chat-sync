@@ -1,5 +1,6 @@
+use super::confirm_signup::ConfirmSignUp;
 use crate::services::auth::AuthService;
-use crate::state::auth_state::{AuthAction, AuthState};
+use crate::state::auth_state::AuthState;
 use web_sys::HtmlInputElement;
 use yew::prelude::*;
 
@@ -17,6 +18,7 @@ pub fn sign_up(props: &SignUpProps) -> Html {
     let confirm_password = use_state(|| String::new());
     let is_loading = use_state(|| false);
     let error = use_state(|| Option::<String>::None);
+    let signed_up_username = use_state(|| Option::<String>::None);
 
     let onsubmit = {
         let username = username.clone();
@@ -26,6 +28,7 @@ pub fn sign_up(props: &SignUpProps) -> Html {
         let is_loading = is_loading.clone();
         let error = error.clone();
         let auth_state = props.auth_state.clone();
+        let signed_up_username = signed_up_username.clone();
 
         Callback::from(move |e: SubmitEvent| {
             e.prevent_default();
@@ -40,7 +43,7 @@ pub fn sign_up(props: &SignUpProps) -> Html {
             let password_val = (*password).clone();
             let is_loading = is_loading.clone();
             let error = error.clone();
-            let auth_state = auth_state.clone();
+            let signed_up_username = signed_up_username.clone();
 
             wasm_bindgen_futures::spawn_local(async move {
                 is_loading.set(true);
@@ -51,13 +54,8 @@ pub fn sign_up(props: &SignUpProps) -> Html {
                     .sign_up(username_val, password_val, email_val)
                     .await
                 {
-                    Ok(()) => {
-                        if let Some(auth_response) = AuthService::get_stored_auth() {
-                            auth_state.dispatch(AuthAction::SetAuthenticated(
-                                auth_response.id_token,
-                                auth_response.access_token,
-                            ));
-                        }
+                    Ok(username) => {
+                        signed_up_username.set(Some(username));
                     }
                     Err(e) => {
                         error.set(Some(e));
@@ -69,86 +67,100 @@ pub fn sign_up(props: &SignUpProps) -> Html {
     };
 
     html! {
-        <div class="signup-container">
-            <h2>{"Sign Up"}</h2>
-            <form {onsubmit}>
-                if let Some(err) = (*error).clone() {
-                    <div class="error-message">{err}</div>
+        if let Some(username) = (*signed_up_username).clone() {
+            <ConfirmSignUp
+                username={username}
+                on_confirmed={
+                    let on_switch_to_login = props.on_switch_to_login.clone();
+                    Callback::from(move |_| on_switch_to_login.emit(()))
                 }
-                <div class="form-group">
-                    <label for="username">{"Username"}</label>
-                    <input
-                        type="text"
-                        id="username"
-                        value={(*username).clone()}
-                        onchange={let username = username.clone(); move |e: Event| {
-                            let input: HtmlInputElement = e.target_unchecked_into();
-                            username.set(input.value());
-                        }}
-                        disabled={*is_loading}
-                    />
-                </div>
-                <div class="form-group">
-                    <label for="email">{"Email"}</label>
-                    <input
-                        type="email"
-                        id="email"
-                        value={(*email).clone()}
-                        onchange={let email = email.clone(); move |e: Event| {
-                            let input: HtmlInputElement = e.target_unchecked_into();
-                            email.set(input.value());
-                        }}
-                        disabled={*is_loading}
-                    />
-                </div>
-                <div class="form-group">
-                    <label for="password">{"Password"}</label>
-                    <input
-                        type="password"
-                        id="password"
-                        value={(*password).clone()}
-                        onchange={let password = password.clone(); move |e: Event| {
-                            let input: HtmlInputElement = e.target_unchecked_into();
-                            password.set(input.value());
-                        }}
-                        disabled={*is_loading}
-                    />
-                </div>
-                <div class="form-group">
-                    <label for="confirm-password">{"Confirm Password"}</label>
-                    <input
-                        type="password"
-                        id="confirm-password"
-                        value={(*confirm_password).clone()}
-                        onchange={let confirm_password = confirm_password.clone(); move |e: Event| {
-                            let input: HtmlInputElement = e.target_unchecked_into();
-                            confirm_password.set(input.value());
-                        }}
-                        disabled={*is_loading}
-                    />
-                </div>
-                <button
-                    type="submit"
-                    disabled={*is_loading}
-                >
-                    if *is_loading {
-                        {"Signing up..."}
-                    } else {
-                        {"Sign Up"}
+                on_back={
+                    let signed_up_username = signed_up_username.clone();
+                    Callback::from(move |_| signed_up_username.set(None))
+                }
+            />
+        } else {
+            <div class="signup-container">
+                <h2>{"Sign Up"}</h2>
+                <form {onsubmit}>
+                    if let Some(err) = (*error).clone() {
+                        <div class="error-message">{err}</div>
                     }
-                </button>
-                <div class="auth-switch">
-                    {"Already have an account? "}
+                    <div class="form-group">
+                        <label for="username">{"Username"}</label>
+                        <input
+                            type="text"
+                            id="username"
+                            value={(*username).clone()}
+                            onchange={let username = username.clone(); move |e: Event| {
+                                let input: HtmlInputElement = e.target_unchecked_into();
+                                username.set(input.value());
+                            }}
+                            disabled={*is_loading}
+                        />
+                    </div>
+                    <div class="form-group">
+                        <label for="email">{"Email"}</label>
+                        <input
+                            type="email"
+                            id="email"
+                            value={(*email).clone()}
+                            onchange={let email = email.clone(); move |e: Event| {
+                                let input: HtmlInputElement = e.target_unchecked_into();
+                                email.set(input.value());
+                            }}
+                            disabled={*is_loading}
+                        />
+                    </div>
+                    <div class="form-group">
+                        <label for="password">{"Password"}</label>
+                        <input
+                            type="password"
+                            id="password"
+                            value={(*password).clone()}
+                            onchange={let password = password.clone(); move |e: Event| {
+                                let input: HtmlInputElement = e.target_unchecked_into();
+                                password.set(input.value());
+                            }}
+                            disabled={*is_loading}
+                        />
+                    </div>
+                    <div class="form-group">
+                        <label for="confirm-password">{"Confirm Password"}</label>
+                        <input
+                            type="password"
+                            id="confirm-password"
+                            value={(*confirm_password).clone()}
+                            onchange={let confirm_password = confirm_password.clone(); move |e: Event| {
+                                let input: HtmlInputElement = e.target_unchecked_into();
+                                confirm_password.set(input.value());
+                            }}
+                            disabled={*is_loading}
+                        />
+                    </div>
                     <button
-                        type="button"
-                        class="link-button"
-                        onclick={let cb = props.on_switch_to_login.clone(); move |_| cb.emit(())}
+                        type="submit"
                         disabled={*is_loading}
                     >
-                        {"Login"}
+                        if *is_loading {
+                            {"Signing up..."}
+                        } else {
+                            {"Sign Up"}
+                        }
                     </button>
-                </div>
-            </form>
-        </div>
+                    <div class="auth-switch">
+                        {"Already have an account? "}
+                        <button
+                            type="button"
+                            class="link-button"
+                            onclick={let cb = props.on_switch_to_login.clone(); move |_| cb.emit(())}
+                            disabled={*is_loading}
+                        >
+                            {"Login"}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        }
     }
 }

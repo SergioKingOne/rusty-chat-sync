@@ -343,3 +343,33 @@ body {
   border-radius: 8px;
   box-shadow: var(--shadow-md);
 }
+
+.confirm-signup-container {
+  max-width: 400px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: white;
+  border-radius: 8px;
+  box-shadow: var(--shadow-md);
+}
+
+.confirm-signup-container p {
+  color: #666;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.confirm-signup-container .form-group {
+  margin-bottom: 1.5rem;
+}
+
+.confirm-signup-container button {
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.confirm-signup-container .link-button {
+  width: auto;
+  display: block;
+  margin: 0 auto;
+}

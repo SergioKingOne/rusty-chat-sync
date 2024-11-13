@@ -10,6 +10,7 @@ const CONTENT_TYPE: &str = "application/x-amz-json-1.1";
 const AUTH_FLOW: &str = "USER_PASSWORD_AUTH";
 const TARGET_INITIATE_AUTH: &str = "AWSCognitoIdentityProviderService.InitiateAuth";
 const TARGET_SIGN_UP: &str = "AWSCognitoIdentityProviderService.SignUp";
+const TARGET_CONFIRM_SIGN_UP: &str = "AWSCognitoIdentityProviderService.ConfirmSignUp";
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct AuthResponse {
@@ -77,6 +78,16 @@ struct UserAttribute {
     value: String,
 }
 
+#[derive(Debug, Serialize)]
+struct ConfirmSignUpRequest {
+    #[serde(rename = "ClientId")]
+    client_id: String,
+    #[serde(rename = "Username")]
+    username: String,
+    #[serde(rename = "ConfirmationCode")]
+    confirmation_code: String,
+}
+
 pub struct AuthService;
 
 impl AuthService {
@@ -138,7 +149,7 @@ impl AuthService {
         username: String,
         password: String,
         email: String,
-    ) -> Result<(), String> {
+    ) -> Result<String, String> {
         let sign_up_request = SignUpRequest {
             client_id: CLIENT_ID.to_string(),
             username: username.clone(),
@@ -183,13 +194,8 @@ impl AuthService {
             log!("User confirmed:", signup_response.user_confirmed);
             log!("User sub:", &signup_response.user_sub);
 
-            // Add a small delay before attempting login
-            gloo::timers::future::TimeoutFuture::new(1_000).await;
-
-            match self.login(username, password).await {
-                Ok(_) => Ok(()),
-                Err(e) => Err(format!("Sign up successful but login failed: {}", e)),
-            }
+            // Return the username instead of attempting immediate login
+            Ok(username)
         } else {
             Err(format!("Sign up failed: {}", response_text))
         }
@@ -205,5 +211,45 @@ impl AuthService {
 
     pub fn is_authenticated() -> bool {
         LocalStorage::get::<AuthResponse>(STORAGE_KEY).is_ok()
+    }
+
+    pub async fn confirm_sign_up(
+        &self,
+        username: String,
+        confirmation_code: String,
+    ) -> Result<(), String> {
+        let confirm_request = ConfirmSignUpRequest {
+            client_id: CLIENT_ID.to_string(),
+            username,
+            confirmation_code,
+        };
+
+        let request_body = serde_json::to_string(&confirm_request)
+            .map_err(|e| format!("Failed to serialize request: {}", e))?;
+
+        log!("Confirm signup request body:", &request_body);
+
+        let response = Request::post(AUTH_ENDPOINT)
+            .header("X-Amz-Target", TARGET_CONFIRM_SIGN_UP)
+            .header("Content-Type", CONTENT_TYPE)
+            .header("Accept", "*/*")
+            .body(request_body)
+            .map_err(|e| e.to_string())?
+            .send()
+            .await
+            .map_err(|e| e.to_string())?;
+
+        let response_text = response
+            .text()
+            .await
+            .map_err(|e| format!("Failed to get response text: {}", e))?;
+
+        log!("Confirm signup response:", &response_text);
+
+        if response.ok() {
+            Ok(())
+        } else {
+            Err(format!("Failed to confirm signup: {}", response_text))
+        }
     }
 }
