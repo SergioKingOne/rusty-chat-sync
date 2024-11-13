@@ -12,7 +12,8 @@ pub const LIST_MESSAGES_QUERY: &str = r#"
     }
 "#;
 
-#[derive(Deserialize)]
-pub struct ListMessagesResponse {
+#[derive(Debug, Deserialize)]
+pub struct ListMessagesData {
+    #[serde(rename = "listMessages")]
     pub list_messages: Vec<MessageData>,
 }

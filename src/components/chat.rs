@@ -2,7 +2,8 @@ use crate::components::login::Login;
 use crate::components::message_input::MessageInput;
 use crate::components::message_list::MessageList;
 use crate::components::signup::SignUp;
-use crate::graphql::queries::{ListMessagesResponse, LIST_MESSAGES_QUERY};
+use crate::graphql::queries::{ListMessagesData, LIST_MESSAGES_QUERY};
+use crate::graphql::types::GraphQLResponse;
 use crate::models::message::{Message, MessageStatus};
 use crate::services::auth::AuthService;
 use crate::state::auth_state::{AuthAction, AuthState};
@@ -53,32 +54,31 @@ pub fn chat() -> Html {
                     match GraphQLClient::new().await {
                         Ok(client) => {
                             let client = client.with_token(token);
-                            let result = client
-                                .execute_query::<_, ListMessagesResponse>(
+                            let result: GraphQLResponse<ListMessagesData> = match client
+                                .execute_query(
                                     "ListMessages",
                                     LIST_MESSAGES_QUERY,
                                     serde_json::json!({}),
                                 )
-                                .await;
-
-                            match result {
-                                Ok(response) => {
-                                    if let Some(data) = response.data {
-                                        chat_state.dispatch(ChatAction::SetMessages(
-                                            data.list_messages
-                                                .into_iter()
-                                                .map(Message::from_message_data)
-                                                .collect(),
-                                        ));
-                                    } else if let Some(errors) = response.errors {
-                                        chat_state.dispatch(ChatAction::SetError(
-                                            errors[0].message.clone(),
-                                        ));
-                                    }
-                                }
+                                .await
+                            {
+                                Ok(result) => result,
                                 Err(e) => {
                                     chat_state.dispatch(ChatAction::SetError(e.to_string()));
+                                    return;
                                 }
+                            };
+
+                            if let Some(data) = result.data {
+                                chat_state.dispatch(ChatAction::SetMessages(
+                                    data.list_messages
+                                        .into_iter()
+                                        .map(Message::from_message_data)
+                                        .collect(),
+                                ));
+                            } else if let Some(errors) = result.errors {
+                                chat_state
+                                    .dispatch(ChatAction::SetError(errors[0].message.clone()));
                             }
                         }
                         Err(e) => {
@@ -167,24 +167,3 @@ pub fn chat() -> Html {
         </div>
     }
 }
-
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
-//     use wasm_bindgen_test::*;
-
-//     wasm_bindgen_test_configure!(run_in_browser);
-
-//     #[wasm_bindgen_test]
-//     async fn test_message_flow() {
-//         use yew::platform::spawn_local;
-
-//         // Create test handle for the component
-//         let handle = yew::Renderer::<Chat>::new().render();
-
-//         // Create message and send it to component
-//         let msg = Message::new_text("Hello".to_string(), "User".to_string());
-//         handle.send_message(ChatAction::AddMessage(msg.clone()));
-
-//     }
-// }

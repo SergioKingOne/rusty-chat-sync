@@ -52,8 +52,9 @@ impl GraphQLClient {
         }
 
         let response = request.json(&request_body).send().await?;
-        println!("Response: {:?}", response);
-        let response_body = response.json().await?;
+        let response_text = response.text().await?;
+        web_sys::console::log_1(&format!("Response: {:?}", &response_text).into());
+        let response_body: GraphQLResponse<T> = serde_json::from_str(&response_text)?;
         Ok(response_body)
     }
 }
