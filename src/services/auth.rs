@@ -11,6 +11,7 @@ const AUTH_FLOW: &str = "USER_PASSWORD_AUTH";
 const TARGET_INITIATE_AUTH: &str = "AWSCognitoIdentityProviderService.InitiateAuth";
 const TARGET_SIGN_UP: &str = "AWSCognitoIdentityProviderService.SignUp";
 const TARGET_CONFIRM_SIGN_UP: &str = "AWSCognitoIdentityProviderService.ConfirmSignUp";
+const TARGET_RESEND_CODE: &str = "AWSCognitoIdentityProviderService.ResendConfirmationCode";
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct AuthResponse {
@@ -88,6 +89,14 @@ struct ConfirmSignUpRequest {
     confirmation_code: String,
 }
 
+#[derive(Debug, Serialize)]
+struct ResendConfirmationCodeRequest {
+    #[serde(rename = "ClientId")]
+    client_id: String,
+    #[serde(rename = "Username")]
+    username: String,
+}
+
 pub struct AuthService;
 
 impl AuthService {
@@ -153,26 +162,21 @@ impl AuthService {
         let sign_up_request = SignUpRequest {
             client_id: CLIENT_ID.to_string(),
             username: username.clone(),
-            password: password.clone(),
+            password,
             user_attributes: vec![UserAttribute {
                 name: "email".to_string(),
                 value: email,
             }],
         };
 
-        // Log the exact request we're about to send
         let request_body = serde_json::to_string(&sign_up_request)
             .map_err(|e| format!("Failed to serialize request: {}", e))?;
 
-        log!("Request URL: https://cognito-idp.us-east-1.amazonaws.com/");
-        log!("Request body:", &request_body);
-
-        // Simplify the request to match the working curl version
         let response = Request::post(AUTH_ENDPOINT)
             .header("X-Amz-Target", TARGET_SIGN_UP)
             .header("Content-Type", CONTENT_TYPE)
             .header("Accept", "*/*")
-            .body(request_body) // Use body() instead of json() to have more control
+            .body(request_body)
             .map_err(|e| e.to_string())?
             .send()
             .await
@@ -183,21 +187,57 @@ impl AuthService {
             .await
             .map_err(|e| format!("Failed to get response text: {}", e))?;
 
-        log!("Response status:", response.status());
-        log!("Response headers:", format!("{:?}", response.headers()));
-        log!("Signup response:", &response_text);
-
         if response.ok() {
             let signup_response: SignUpResponse = serde_json::from_str(&response_text)
                 .map_err(|e| format!("Failed to parse signup response: {}", e))?;
 
-            log!("User confirmed:", signup_response.user_confirmed);
-            log!("User sub:", &signup_response.user_sub);
-
-            // Return the username instead of attempting immediate login
             Ok(username)
         } else {
-            Err(format!("Sign up failed: {}", response_text))
+            // Check if the error is UsernameExistsException
+            if response_text.contains("UsernameExistsException") {
+                // Try to resend the confirmation code
+                self.resend_confirmation_code(username).await
+            } else {
+                Err(format!("Sign up failed: {}", response_text))
+            }
+        }
+    }
+
+    async fn resend_confirmation_code(&self, username: String) -> Result<String, String> {
+        let resend_request = ResendConfirmationCodeRequest {
+            client_id: CLIENT_ID.to_string(),
+            username: username.clone(),
+        };
+
+        let request_body = serde_json::to_string(&resend_request)
+            .map_err(|e| format!("Failed to serialize request: {}", e))?;
+
+        log!("Resend code request body:", &request_body);
+
+        let response = Request::post(AUTH_ENDPOINT)
+            .header("X-Amz-Target", TARGET_RESEND_CODE)
+            .header("Content-Type", CONTENT_TYPE)
+            .header("Accept", "*/*")
+            .body(request_body)
+            .map_err(|e| e.to_string())?
+            .send()
+            .await
+            .map_err(|e| e.to_string())?;
+
+        let response_text = response
+            .text()
+            .await
+            .map_err(|e| format!("Failed to get response text: {}", e))?;
+
+        log!("Resend code response:", &response_text);
+
+        if response.ok() {
+            Ok(username)
+        } else {
+            Err(format!(
+                "Failed to resend confirmation code: {}",
+                response_text
+            ))
         }
     }
 

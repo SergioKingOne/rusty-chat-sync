@@ -7,6 +7,8 @@ pub struct ConfirmSignUpProps {
     pub username: String,
     pub on_confirmed: Callback<()>,
     pub on_back: Callback<()>,
+    #[prop_or_default]
+    pub is_resend: bool,
 }
 
 #[function_component(ConfirmSignUp)]
@@ -51,7 +53,13 @@ pub fn confirm_signup(props: &ConfirmSignUpProps) -> Html {
     html! {
         <div class="confirm-signup-container">
             <h2>{"Confirm Your Email"}</h2>
-            <p>{"Please enter the confirmation code sent to your email"}</p>
+            <p>
+                if props.is_resend {
+                    {"This account exists but needs confirmation. A new confirmation code has been sent to your email."}
+                } else {
+                    {"Please enter the confirmation code sent to your email"}
+                }
+            </p>
 
             <form {onsubmit}>
                 if let Some(err) = (*error).clone() {
