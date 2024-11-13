@@ -35,14 +35,6 @@ struct AuthenticationResult {
     id_token: String,
 }
 
-#[derive(Debug, Deserialize)]
-struct SignUpResponse {
-    #[serde(rename = "UserConfirmed")]
-    user_confirmed: bool,
-    #[serde(rename = "UserSub")]
-    user_sub: String,
-}
-
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "PascalCase")]
 struct AuthRequest {
@@ -188,9 +180,6 @@ impl AuthService {
             .map_err(|e| format!("Failed to get response text: {}", e))?;
 
         if response.ok() {
-            let signup_response: SignUpResponse = serde_json::from_str(&response_text)
-                .map_err(|e| format!("Failed to parse signup response: {}", e))?;
-
             Ok(username)
         } else {
             // Check if the error is UsernameExistsException

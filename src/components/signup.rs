@@ -27,7 +27,6 @@ pub fn sign_up(props: &SignUpProps) -> Html {
         let confirm_password = confirm_password.clone();
         let is_loading = is_loading.clone();
         let error = error.clone();
-        let auth_state = props.auth_state.clone();
         let signed_up_username = signed_up_username.clone();
 
         Callback::from(move |e: SubmitEvent| {
