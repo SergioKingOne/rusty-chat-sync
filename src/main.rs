@@ -1,5 +1,5 @@
-use rusty_chat_sync_lib::components::chat::Chat;
+use rusty_chat_sync_lib::components::app::App;
 
 fn main() {
-    yew::Renderer::<Chat>::new().render();
+    yew::Renderer::<App>::new().render();
 }
