@@ -20,5 +20,6 @@ pub struct CreateMessageVariables {
 
 #[derive(Deserialize)]
 pub struct CreateMessageResponse {
+    #[serde(rename = "createMessage")]
     pub create_message: MessageData,
 }

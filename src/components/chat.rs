@@ -1,6 +1,9 @@
 use crate::components::chat_status::ChatStatus;
 use crate::components::message_input::MessageInput;
 use crate::components::message_list::MessageList;
+use crate::graphql::mutations::{
+    CreateMessageResponse, CreateMessageVariables, CREATE_MESSAGE_MUTATION,
+};
 use crate::graphql::queries::{ListMessagesData, LIST_MESSAGES_QUERY};
 use crate::graphql::types::GraphQLResponse;
 use crate::models::message::{Message, MessageStatus};
@@ -60,7 +63,14 @@ pub fn chat(props: &ChatProps) -> Html {
             <MessageList messages={chat_state.messages.clone()} />
             <MessageInput on_send={
                 let chat_state = chat_state.clone();
-                Callback::from(move |msg: Message| handle_message_send(&chat_state, msg))
+                let token = props.auth_state.token.clone();
+                Callback::from(move |msg: Message| {
+                    if let Some(token) = token.clone() {
+                        handle_message_send(&chat_state, msg, token);
+                    } else {
+                        chat_state.dispatch(ChatAction::SetError("Not authenticated".to_string()));
+                    }
+                })
             } />
         </div>
     }
@@ -103,19 +113,63 @@ async fn fetch_messages(chat_state: &UseReducerHandle<ChatState>, token: &str) {
     chat_state.dispatch(ChatAction::SetLoading(false));
 }
 
-fn handle_message_send(chat_state: &UseReducerHandle<ChatState>, msg: Message) {
+fn handle_message_send(chat_state: &UseReducerHandle<ChatState>, msg: Message, token: String) {
     chat_state.dispatch(ChatAction::AddMessage(msg.clone()));
 
     // Clone state before moving into async block
     let chat_state = chat_state.clone();
-    wasm_bindgen_futures::spawn_local(async move {
-        // TODO: Implement GraphQL mutation for sending message
 
-        // Simulate network delay for now
-        gloo::timers::future::TimeoutFuture::new(500).await;
-        chat_state.dispatch(ChatAction::UpdateMessageStatus(
-            msg.message_id,
-            MessageStatus::Sent,
-        ));
+    wasm_bindgen_futures::spawn_local(async move {
+        match GraphQLClient::new().await {
+            Ok(client) => {
+                // Add the token to the client
+                let client = client.with_token(token);
+
+                let variables = CreateMessageVariables {
+                    content: msg.content.clone(),
+                    author: msg.author.clone(),
+                };
+
+                match client
+                    .execute_query::<_, CreateMessageResponse>(
+                        "CreateMessage",
+                        CREATE_MESSAGE_MUTATION,
+                        variables,
+                    )
+                    .await
+                {
+                    Ok(response) => {
+                        if let Some(data) = response.data {
+                            // Update the message with the server-returned data
+                            let server_message = Message::from_message_data(data.create_message);
+                            chat_state.dispatch(ChatAction::UpdateMessage(
+                                msg.message_id,
+                                server_message,
+                            ));
+                        } else if let Some(errors) = response.errors {
+                            chat_state.dispatch(ChatAction::UpdateMessageStatus(
+                                msg.message_id,
+                                MessageStatus::Failed,
+                            ));
+                            chat_state.dispatch(ChatAction::SetError(errors[0].message.clone()));
+                        }
+                    }
+                    Err(e) => {
+                        chat_state.dispatch(ChatAction::UpdateMessageStatus(
+                            msg.message_id,
+                            MessageStatus::Failed,
+                        ));
+                        chat_state.dispatch(ChatAction::SetError(e.to_string()));
+                    }
+                }
+            }
+            Err(e) => {
+                chat_state.dispatch(ChatAction::UpdateMessageStatus(
+                    msg.message_id,
+                    MessageStatus::Failed,
+                ));
+                chat_state.dispatch(ChatAction::SetError(e.to_string()));
+            }
+        }
     });
 }

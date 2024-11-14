@@ -50,6 +50,16 @@ resource "aws_cognito_user_pool_client" "client" {
     "ALLOW_USER_PASSWORD_AUTH",
     "ALLOW_REFRESH_TOKEN_AUTH"
   ]
+
+  access_token_validity  = 60 # 1 hour
+  id_token_validity      = 60 # 1 hour
+  refresh_token_validity = 30 # 30 days
+
+  token_validity_units {
+    access_token  = "minutes"
+    id_token      = "minutes"
+    refresh_token = "days"
+  }
 }
 
 module "dynamodb" {

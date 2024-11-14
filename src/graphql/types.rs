@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MessageData {
+    #[serde(rename = "messageId")]
     pub message_id: String,
     pub content: String,
     pub author: String,

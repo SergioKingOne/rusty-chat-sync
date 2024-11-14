@@ -2,14 +2,11 @@
   "version": "2018-05-29",
   "operation": "PutItem",
   "key": {
-    "messageId": { "S": "${util.autoId()}" }
+    "messageId": $util.dynamodb.toDynamoDBJson($util.autoId()),
+    "timestamp": $util.dynamodb.toDynamoDBJson($util.time.nowEpochMilliSeconds())
   },
   "attributeValues": {
-    "content": { "S": "$ctx.args.content" },
-    "author": { "S": "$ctx.args.author" },
-    "timestamp": { "N": "$util.time.nowEpochMilliSeconds()" }
-  },
-  "condition": {
-    "expression": "attribute_not_exists(messageId)"
+    "content": $util.dynamodb.toDynamoDBJson($ctx.args.content),
+    "author": $util.dynamodb.toDynamoDBJson($ctx.args.author)
   }
 }
