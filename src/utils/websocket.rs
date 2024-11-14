@@ -33,7 +33,6 @@ pub struct SubscriptionResponse {
 
 pub struct AppSyncWebSocket {
     subscription_id: String,
-    on_message: Rc<dyn Fn(serde_json::Value)>,
 }
 
 impl AppSyncWebSocket {
@@ -115,7 +114,6 @@ impl AppSyncWebSocket {
 
         Self {
             subscription_id,
-            on_message,
         }
     }
 
