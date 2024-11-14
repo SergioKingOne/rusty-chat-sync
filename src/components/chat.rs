@@ -40,23 +40,28 @@ pub fn chat(props: &ChatProps) -> Html {
 
         use_effect_with((), move |_| {
             if let Some(token) = token {
-                let chat_state = chat_state.clone();
+                let token = token.clone();
+                let token_for_fetch = token.clone();
+                let token_for_sub = token.clone();
+
+                let chat_state_for_fetch = chat_state.clone();
 
                 // Fetch initial messages
                 wasm_bindgen_futures::spawn_local(async move {
-                    fetch_messages(&chat_state, &token).await;
+                    fetch_messages(&chat_state_for_fetch, &token_for_fetch).await;
                 });
 
                 // Setup subscription
-                let chat_state_clone = chat_state.clone();
+                let chat_state_for_sub = chat_state.clone();
+
                 let websocket = AppSyncWebSocket::new(
                     "wss://4psoayuvcnfu7ekadjzgs6erli.appsync-realtime-api.us-east-1.amazonaws.com/graphql",
-                    &token,
+                    &token_for_sub,
                     ON_CREATE_MESSAGE_SUBSCRIPTION,
                     move |payload| {
                         if let Ok(data) = serde_json::from_value::<OnCreateMessageData>(payload) {
                             let new_message = Message::from_message_data(data.message);
-                            chat_state_clone.dispatch(ChatAction::AddMessage(new_message));
+                            chat_state_for_sub.dispatch(ChatAction::AddMessage(new_message));
                         }
                     },
                 );
@@ -64,6 +69,7 @@ pub fn chat(props: &ChatProps) -> Html {
             }
 
             // Cleanup subscription on unmount
+            let ws = ws.clone();
             move || {
                 if let Some(websocket) = (*ws).clone() {
                     websocket.close();

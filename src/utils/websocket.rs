@@ -119,7 +119,8 @@ impl AppSyncWebSocket {
         }
     }
 
-    pub fn close(subscription_id: String) {
+    pub fn close(&self) {
+        let subscription_id = self.subscription_id.clone();
         spawn_local(async move {
             if let Ok(mut ws) = WebSocket::open("wss://4psoayuvcnfu7ekadjzgs6erli.appsync-realtime-api.us-east-1.amazonaws.com/graphql") {
                 let stop_subscription = SubscriptionMessage {
@@ -135,6 +136,7 @@ impl AppSyncWebSocket {
 
                 let stop_msg = Message::Text(serde_json::to_string(&stop_subscription).unwrap());
                 
+                // Send stop message before closing
                 ws.send(stop_msg).await.unwrap();
                 ws.close(Some(1000), Some("Client disconnecting")).unwrap();
             }
@@ -144,6 +146,6 @@ impl AppSyncWebSocket {
 
 impl Drop for AppSyncWebSocket {
     fn drop(&mut self) {
-        Self::close(self.subscription_id.clone());
+        self.close();
     }
 }
