@@ -29,7 +29,6 @@ pub fn chat(props: &ChatProps) -> Html {
         error: None,
     });
 
-    // Add this new state for WebSocket
     let ws = use_state(|| None::<Rc<AppSyncWebSocket>>);
 
     // Initialize chat and subscription
