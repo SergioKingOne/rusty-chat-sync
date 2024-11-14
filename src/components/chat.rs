@@ -5,11 +5,14 @@ use crate::graphql::mutations::{
     CreateMessageResponse, CreateMessageVariables, CREATE_MESSAGE_MUTATION,
 };
 use crate::graphql::queries::{ListMessagesData, LIST_MESSAGES_QUERY};
+use crate::graphql::subscriptions::{OnCreateMessageData, ON_CREATE_MESSAGE_SUBSCRIPTION};
 use crate::graphql::types::GraphQLResponse;
 use crate::models::message::{Message, MessageStatus};
 use crate::state::auth_state::AuthState;
 use crate::state::chat_state::{ChatAction, ChatState};
 use crate::utils::graphql_client::GraphQLClient;
+use crate::utils::websocket::AppSyncWebSocket;
+use std::rc::Rc;
 use yew::prelude::*;
 
 #[derive(Properties, PartialEq)]
@@ -26,18 +29,46 @@ pub fn chat(props: &ChatProps) -> Html {
         error: None,
     });
 
-    // Initialize chat
+    // Add this new state for WebSocket
+    let ws = use_state(|| None::<Rc<AppSyncWebSocket>>);
+
+    // Initialize chat and subscription
     {
         let chat_state = chat_state.clone();
         let token = props.auth_state.token.clone();
+        let ws = ws.clone();
+
         use_effect_with((), move |_| {
             if let Some(token) = token {
                 let chat_state = chat_state.clone();
+
+                // Fetch initial messages
                 wasm_bindgen_futures::spawn_local(async move {
                     fetch_messages(&chat_state, &token).await;
                 });
+
+                // Setup subscription
+                let chat_state_clone = chat_state.clone();
+                let websocket = AppSyncWebSocket::new(
+                    "wss://4psoayuvcnfu7ekadjzgs6erli.appsync-realtime-api.us-east-1.amazonaws.com/graphql",
+                    &token,
+                    ON_CREATE_MESSAGE_SUBSCRIPTION,
+                    move |payload| {
+                        if let Ok(data) = serde_json::from_value::<OnCreateMessageData>(payload) {
+                            let new_message = Message::from_message_data(data.message);
+                            chat_state_clone.dispatch(ChatAction::AddMessage(new_message));
+                        }
+                    },
+                );
+                ws.set(Some(Rc::new(websocket)));
             }
-            || ()
+
+            // Cleanup subscription on unmount
+            move || {
+                if let Some(websocket) = (*ws).clone() {
+                    websocket.close();
+                }
+            }
         });
     }
 
