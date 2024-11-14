@@ -131,12 +131,14 @@ async fn fetch_messages(chat_state: &UseReducerHandle<ChatState>, token: &str) {
             };
 
             if let Some(data) = result.data {
-                chat_state.dispatch(ChatAction::SetMessages(
-                    data.list_messages
-                        .into_iter()
-                        .map(Message::from_message_data)
-                        .collect(),
-                ));
+                let mut messages: Vec<Message> = data
+                    .list_messages
+                    .into_iter()
+                    .map(Message::from_message_data)
+                    .collect();
+                // TODO: See if we can query and sort by timestamp directly from the API
+                messages.sort_by(|a, b| a.timestamp.partial_cmp(&b.timestamp).unwrap());
+                chat_state.dispatch(ChatAction::SetMessages(messages));
             } else if let Some(errors) = result.errors {
                 chat_state.dispatch(ChatAction::SetError(errors[0].message.clone()));
             }
