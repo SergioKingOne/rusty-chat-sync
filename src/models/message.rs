@@ -1,7 +1,6 @@
+use crate::graphql::types::MessageData;
 use serde::{Deserialize, Serialize};
 use strum_macros::Display;
-
-use crate::graphql::queries::list_messages;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Display)]
 pub enum MessageStatus {
@@ -52,15 +51,13 @@ impl Message {
             message_type: MessageType::System,
         }
     }
-}
 
-impl From<list_messages::ListMessagesListMessages> for Message {
-    fn from(gql_msg: list_messages::ListMessagesListMessages) -> Self {
+    pub fn from_message_data(data: MessageData) -> Self {
         Self {
-            message_id: gql_msg.message_id,
-            content: gql_msg.content,
-            author: gql_msg.author,
-            timestamp: gql_msg.timestamp,
+            message_id: data.message_id,
+            content: data.content,
+            author: data.author,
+            timestamp: data.timestamp,
             status: MessageStatus::Sent,
             message_type: MessageType::Text,
         }

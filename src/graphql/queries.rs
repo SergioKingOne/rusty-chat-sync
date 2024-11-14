@@ -1,9 +1,19 @@
-use graphql_client::GraphQLQuery;
+use crate::graphql::types::MessageData;
+use serde::Deserialize;
 
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "terraform/appsync/schema.graphql",
-    query_path = "src/graphql/queries/list_messages.graphql",
-    response_derives = "Debug, Serialize, Deserialize"
-)]
-pub struct ListMessages;
+pub const LIST_MESSAGES_QUERY: &str = r#"
+    query ListMessages {
+        listMessages {
+            messageId
+            content
+            author
+            timestamp
+        }
+    }
+"#;
+
+#[derive(Debug, Deserialize)]
+pub struct ListMessagesData {
+    #[serde(rename = "listMessages")]
+    pub list_messages: Vec<MessageData>,
+}

@@ -1,24 +1,15 @@
-use aws_config::meta::region::RegionProviderChain;
-use aws_sdk_cognitoidentityprovider::Client as CognitoClient;
-use graphql_client::Response;
+use crate::graphql::types::{GraphQLRequest, GraphQLResponse};
 use reqwest::Client as ReqwestClient;
-use serde::de::DeserializeOwned;
+use serde::{de::DeserializeOwned, Serialize};
 
 pub struct GraphQLClient {
     http_client: ReqwestClient,
     endpoint: String,
-    cognito_client: CognitoClient,
+    auth_token: Option<String>,
 }
 
 impl GraphQLClient {
     pub async fn new() -> Result<Self, Box<dyn std::error::Error>> {
-        let region_provider = RegionProviderChain::default_provider().or_else("us-east-1");
-        let config = aws_config::defaults(aws_config::BehaviorVersion::v2024_03_28())
-            .region(region_provider)
-            .load()
-            .await;
-
-        let cognito_client = CognitoClient::new(&config);
         let http_client = ReqwestClient::builder().build()?;
 
         Ok(Self {
@@ -26,38 +17,44 @@ impl GraphQLClient {
             endpoint: String::from(
                 "https://4psoayuvcnfu7ekadjzgs6erli.appsync-api.us-east-1.amazonaws.com/graphql",
             ),
-            cognito_client,
+            auth_token: None,
         })
     }
 
-    pub async fn execute_query<T: DeserializeOwned>(
+    pub fn with_token(mut self, token: String) -> Self {
+        self.auth_token = Some(token);
+        self
+    }
+
+    pub async fn execute_query<V, T>(
         &self,
         operation_name: &str,
         query: &str,
-        variables: serde_json::Value,
-    ) -> Result<Response<T>, Box<dyn std::error::Error>> {
-        let request_body = serde_json::json!({
-            "operationName": operation_name,
-            "query": query,
-            "variables": variables,
-        });
+        variables: V,
+    ) -> Result<GraphQLResponse<T>, Box<dyn std::error::Error>>
+    where
+        V: Serialize,
+        T: DeserializeOwned,
+    {
+        let request_body = GraphQLRequest {
+            query: query.to_string(),
+            variables,
+            operation_name: operation_name.to_string(),
+        };
 
-        let response = self
+        let mut request = self
             .http_client
             .post(&self.endpoint)
-            .header("Content-Type", "application/json")
-            .body(serde_json::to_string(&request_body)?)
-            .send()
-            .await?;
+            .header("Content-Type", "application/json");
 
-        let response_body = response.text().await?;
-        let response: Response<T> = serde_json::from_str(&response_body)?;
-        Ok(response)
-    }
+        if let Some(token) = &self.auth_token {
+            request = request.header("Authorization", token);
+        }
 
-    // TODO: Add method to get Cognito authentication token
-    async fn get_auth_token(&self) -> Result<String, Box<dyn std::error::Error>> {
-        // Implement Cognito authentication flow
-        todo!()
+        let response = request.json(&request_body).send().await?;
+        let response_text = response.text().await?;
+        web_sys::console::log_1(&format!("Response: {:?}", &response_text).into());
+        let response_body: GraphQLResponse<T> = serde_json::from_str(&response_text)?;
+        Ok(response_body)
     }
 }

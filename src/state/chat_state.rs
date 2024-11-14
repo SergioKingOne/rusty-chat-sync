@@ -11,6 +11,7 @@ pub struct ChatState {
 
 pub enum ChatAction {
     AddMessage(Message),
+    UpdateMessage(String, Message),
     UpdateMessageStatus(String, MessageStatus),
     SetError(String),
     ClearError,
@@ -44,6 +45,11 @@ impl Reducible for ChatState {
             }
             ChatAction::SetMessages(messages) => {
                 next_state.messages = messages;
+            }
+            ChatAction::UpdateMessage(id, new_message) => {
+                if let Some(msg) = next_state.messages.iter_mut().find(|m| m.message_id == id) {
+                    *msg = new_message;
+                }
             }
         }
 

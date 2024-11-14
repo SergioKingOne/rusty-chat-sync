@@ -1,9 +1,25 @@
-use graphql_client::GraphQLQuery;
+use crate::graphql::types::MessageData;
+use serde::{Deserialize, Serialize};
 
-#[derive(GraphQLQuery)]
-#[graphql(
-    schema_path = "terraform/appsync/schema.graphql",
-    query_path = "src/graphql/mutations/create_message.graphql",
-    response_derives = "Debug, Serialize, Deserialize"
-)]
-pub struct CreateMessage;
+pub const CREATE_MESSAGE_MUTATION: &str = r#"
+    mutation CreateMessage($content: String!, $author: String!) {
+        createMessage(content: $content, author: $author) {
+            messageId
+            content
+            author
+            timestamp
+        }
+    }
+"#;
+
+#[derive(Serialize)]
+pub struct CreateMessageVariables {
+    pub content: String,
+    pub author: String,
+}
+
+#[derive(Deserialize)]
+pub struct CreateMessageResponse {
+    #[serde(rename = "createMessage")]
+    pub create_message: MessageData,
+}

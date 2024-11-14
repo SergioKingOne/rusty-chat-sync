@@ -13,6 +13,7 @@ pub struct Config {
     pub aws_region: String,
     pub aws_id: String,
     pub log_level: String,
+    pub graphql_endpoint: String,
 }
 
 impl Config {
@@ -25,6 +26,7 @@ impl Config {
             aws_region: get_var_with_default("AWS_REGION", "us-east-1"),
             aws_id: get_required_var("AWS_ID"),
             log_level: get_var_with_default("RUST_LOG", "info"),
+            graphql_endpoint: get_required_var("GRAPHQL_ENDPOINT"),
         }
     }
 
