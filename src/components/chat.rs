@@ -12,6 +12,7 @@ use crate::state::auth_state::AuthState;
 use crate::state::chat_state::{ChatAction, ChatState};
 use crate::utils::graphql_client::GraphQLClient;
 use crate::utils::websocket::AppSyncWebSocket;
+use gloo::console::log;
 use std::rc::Rc;
 use yew::prelude::*;
 
@@ -58,6 +59,10 @@ pub fn chat(props: &ChatProps) -> Html {
                     &token_for_sub,
                     ON_CREATE_MESSAGE_SUBSCRIPTION,
                     move |payload| {
+                        // Convert the Value to a string first
+                        if let Ok(payload_str) = serde_json::to_string(&payload) {
+                            web_sys::console::log_1(&payload_str.into());
+                        }
                         if let Ok(data) = serde_json::from_value::<OnCreateMessageData>(payload) {
                             let new_message = Message::from_message_data(data.message);
                             chat_state_for_sub.dispatch(ChatAction::AddMessage(new_message));

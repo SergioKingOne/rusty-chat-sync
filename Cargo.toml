@@ -27,6 +27,7 @@ gloo = { version = "0.11.0", features = [
 gloo-net = { version = "0.6.0", features = ["websocket"] }
 wasm-bindgen-futures = "0.4"
 js-sys = "0.3"
+gloo-timers = "0.3.0"
 
 # Serialization
 serde = { version = "1.0", features = ["derive"] }
@@ -36,15 +37,13 @@ serde_json = "1.0"
 uuid = { version = "1.1", features = ["v4", "js"] }
 chrono = { version = "0.4", features = ["wasmbind"] }
 strum_macros = "0.26"
-dotenv = "0.15"
 lazy_static = "1.4"
 futures = "0.3"
+base64 = "0.22"
+instant = { version = "0.1", features = ["wasm-bindgen"] }
 
 # HTTP client with WASM support
 reqwest = { version = "0.12.9", features = ["json"] }
-
-# Environment
-env_logger = "0.11"
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3"
@@ -57,6 +56,5 @@ crate-type = ["cdylib", "rlib"]
 [[bin]]
 name = "rusty_chat_sync"
 path = "src/main.rs"
-
 [profile.release]
 opt-level = "s"
