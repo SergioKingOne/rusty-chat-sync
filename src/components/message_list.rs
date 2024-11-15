@@ -6,6 +6,7 @@ use yew::prelude::*;
 #[derive(Properties, PartialEq)]
 pub struct MessageListProps {
     pub messages: Vec<Message>,
+    pub current_user_id: String,
 }
 
 #[function_component(MessageList)]
@@ -61,7 +62,7 @@ pub fn message_list(props: &MessageListProps) -> Html {
                     let message_class = match msg.message_type {
                         MessageType::System => "system",
                         MessageType::Text => {
-                            if msg.author == "User" { "sent" } else { "received" }
+                            if msg.author == props.current_user_id { "sent" } else { "received" }
                         }
                         MessageType::Error => "error",
                     };

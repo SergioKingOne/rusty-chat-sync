@@ -33,11 +33,11 @@ pub fn login(props: &LoginProps) -> Html {
                 is_loading.set(true);
                 let auth_service = AuthService::new();
 
-                match auth_service.login(username_val, password_val).await {
+                match auth_service.login(username_val.clone(), password_val).await {
                     Ok(response) => {
                         auth_state.dispatch(AuthAction::SetAuthenticated(
                             response.id_token,
-                            response.access_token,
+                            username_val,
                         ));
                     }
                     Err(e) => {

@@ -96,7 +96,10 @@ pub fn chat(props: &ChatProps) -> Html {
                     }
                 />
             </div>
-            <MessageList messages={chat_state.messages.clone()} />
+            <MessageList
+                messages={chat_state.messages.clone()}
+                current_user_id={props.auth_state.user_id.clone().unwrap_or_default()}
+            />
             <MessageInput on_send={
                 let chat_state = chat_state.clone();
                 let token = props.auth_state.token.clone();
@@ -107,7 +110,7 @@ pub fn chat(props: &ChatProps) -> Html {
                         chat_state.dispatch(ChatAction::SetError("Not authenticated".to_string()));
                     }
                 })
-            } />
+            } user_id={props.auth_state.user_id.clone().unwrap_or("sergio".to_string())} />
         </div>
     }
 }

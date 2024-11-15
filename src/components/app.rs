@@ -8,12 +8,11 @@ use yew::prelude::*;
 #[function_component(App)]
 pub fn app() -> Html {
     let auth_state = use_reducer(|| {
-        // Check for stored auth on initial load
         if let Some(stored_auth) = AuthService::get_stored_auth() {
             AuthState {
                 is_authenticated: true,
                 token: Some(stored_auth.id_token),
-                user_id: Some(stored_auth.access_token),
+                user_id: Some(stored_auth.username),
                 error: None,
             }
         } else {
