@@ -86,11 +86,16 @@ impl AppSyncWebSocket {
 
         let init_msg = Message::Text(serde_json::to_string(&connection_init).unwrap());
 
+        let subscription_query_json = serde_json::json!({
+            "query": subscription_query,
+            "variables": {}
+        });
+
         let start_subscription = serde_json::json!({
             "id": subscription_id,
             "type": "start",
             "payload": {
-                "data": subscription_query,
+                "data": serde_json::to_string(&subscription_query_json).unwrap(),
                 "extensions": {
                     "authorization": {
                         "Authorization": auth_token,

@@ -109,11 +109,6 @@ module "appsync" {
       request_template  = file("${path.module}/appsync/resolvers/Mutation.createMessage.req.vtl")
       response_template = file("${path.module}/appsync/resolvers/Mutation.createMessage.res.vtl")
     }
-    "Subscription.onCreateMessage" = {
-      data_source       = "MessagesTable"
-      request_template  = file("${path.module}/appsync/resolvers/Subscription.onCreateMessage.req.vtl")
-      response_template = file("${path.module}/appsync/resolvers/Subscription.onCreateMessage.res.vtl")
-    }
   }
 }
 
