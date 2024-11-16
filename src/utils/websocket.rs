@@ -3,29 +3,10 @@ use futures::stream::SplitSink;
 use futures::{SinkExt, StreamExt};
 use gloo_net::websocket::{futures::WebSocket, Message};
 use instant::Instant;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use std::cell::RefCell;
 use std::rc::Rc;
 use wasm_bindgen_futures::spawn_local;
-
-#[derive(Debug, Serialize)]
-struct SubscriptionMessage {
-    id: String,
-    #[serde(rename = "type")]
-    msg_type: String,
-    payload: SubscriptionPayload,
-}
-
-#[derive(Debug, Serialize)]
-struct SubscriptionPayload {
-    data: String,
-    extensions: Extensions,
-}
-
-#[derive(Debug, Serialize)]
-struct Extensions {
-    authorization: String,
-}
 
 #[derive(Debug, Deserialize)]
 pub struct SubscriptionResponse {
@@ -122,7 +103,7 @@ impl AppSyncWebSocket {
         let write = write.clone();
         let write_for_return = write.clone();
         let read_future = async move {
-            let mut last_ka = Rc::new(RefCell::new(Instant::now()));
+            let last_ka = Rc::new(RefCell::new(Instant::now()));
             let last_ka_clone = last_ka.clone();
 
             while let Some(msg) = read.next().await {
@@ -227,25 +208,4 @@ impl Drop for AppSyncWebSocket {
     fn drop(&mut self) {
         self.close();
     }
-}
-
-fn connect_with_retry(url: &str) -> Result<WebSocket, std::io::Error> {
-    let mut retries = 0;
-    let max_retries = 5;
-
-    while retries < max_retries {
-        match WebSocket::open_with_protocol(url, "graphql-ws") {
-            Ok(ws) => return Ok(ws),
-            Err(e) => {
-                retries += 1;
-                let delay = 2u32.pow(retries) * 100; // Exponential backoff
-                gloo_timers::future::TimeoutFuture::new(delay);
-            }
-        }
-    }
-
-    Err(std::io::Error::new(
-        std::io::ErrorKind::Other,
-        "Failed to connect after max retries",
-    ))
 }

@@ -5,14 +5,13 @@ use crate::graphql::mutations::{
     CreateMessageResponse, CreateMessageVariables, CREATE_MESSAGE_MUTATION,
 };
 use crate::graphql::queries::{ListMessagesData, LIST_MESSAGES_QUERY};
-use crate::graphql::subscriptions::{OnCreateMessageData, ON_CREATE_MESSAGE_SUBSCRIPTION};
+use crate::graphql::subscriptions::{SubscriptionPayload, ON_CREATE_MESSAGE_SUBSCRIPTION};
 use crate::graphql::types::GraphQLResponse;
 use crate::models::message::{Message, MessageStatus};
 use crate::state::auth_state::AuthState;
 use crate::state::chat_state::{ChatAction, ChatState};
 use crate::utils::graphql_client::GraphQLClient;
 use crate::utils::websocket::AppSyncWebSocket;
-use gloo::console::log;
 use std::rc::Rc;
 use yew::prelude::*;
 
@@ -59,13 +58,12 @@ pub fn chat(props: &ChatProps) -> Html {
                     &token_for_sub,
                     ON_CREATE_MESSAGE_SUBSCRIPTION,
                     move |payload| {
-                        // Convert the Value to a string first
-                        if let Ok(payload_str) = serde_json::to_string(&payload) {
-                            web_sys::console::log_1(&payload_str.into());
-                        }
-                        if let Ok(data) = serde_json::from_value::<OnCreateMessageData>(payload) {
-                            let new_message = Message::from_message_data(data.message);
+                        if let Ok(subscription_payload) = serde_json::from_value::<SubscriptionPayload>(payload.clone()) {
+                            let message_data = subscription_payload.data.on_create_message.into_message_data();
+                            let new_message = Message::from_message_data(message_data);
                             chat_state_for_sub.dispatch(ChatAction::AddMessage(new_message));
+                        } else {
+                            web_sys::console::log_1(&format!("Failed to parse subscription payload: {:?}", payload).into());
                         }
                     },
                 );
