@@ -109,7 +109,6 @@ impl AppSyncWebSocket {
             while let Some(msg) = read.next().await {
                 match msg {
                     Ok(Message::Text(text)) => {
-                        web_sys::console::log_1(&format!("Received message: {}", text).into());
                         if let Ok(response) = serde_json::from_str::<SubscriptionResponse>(&text) {
                             match response.msg_type.as_str() {
                                 "connection_ack" => {
@@ -159,7 +158,6 @@ impl AppSyncWebSocket {
                                     );
                                 }
                                 "ka" => {
-                                    web_sys::console::log_1(&"Received keepalive".into());
                                     *last_ka.borrow_mut() = Instant::now();
                                 }
                                 _ => {
@@ -171,9 +169,7 @@ impl AppSyncWebSocket {
                             }
                         }
                     }
-                    Ok(Message::Bytes(_)) => {
-                        web_sys::console::log_1(&"Received binary message".into());
-                    }
+                    Ok(Message::Bytes(_)) => {}
                     Err(e) => {
                         web_sys::console::log_1(&format!("WebSocket error: {:?}", e).into());
                     }

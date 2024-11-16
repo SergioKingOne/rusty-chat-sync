@@ -11,21 +11,6 @@ pub struct MessageListProps {
 
 #[function_component(MessageList)]
 pub fn message_list(props: &MessageListProps) -> Html {
-    use_effect_with(props.messages.clone(), |messages| {
-        web_sys::console::log_1(
-            &format!("MessageList received new messages: {}", messages.len()).into(),
-        );
-        || ()
-    });
-
-    web_sys::console::log_1(
-        &format!(
-            "MessageList rendering with {} messages",
-            props.messages.len()
-        )
-        .into(),
-    );
-
     let list_ref = use_node_ref();
     let new_messages = use_state(|| 0);
     let auto_scroll = use_state(|| true);
