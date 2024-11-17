@@ -1,6 +1,5 @@
 use crate::services::auth::AuthService;
 use crate::state::auth_state::{AuthAction, AuthState};
-use gloo::dialogs::alert;
 use web_sys::HtmlInputElement;
 use yew::prelude::*;
 
@@ -15,15 +14,50 @@ pub fn login(props: &LoginProps) -> Html {
     let username = use_state(|| String::new());
     let password = use_state(|| String::new());
     let is_loading = use_state(|| false);
+    let validation_error = use_state(|| Option::<String>::None);
+
+    // Add validation before submission
+    let validate_form = {
+        let username = username.clone();
+        let password = password.clone();
+        let validation_error = validation_error.clone();
+
+        move || {
+            validation_error.set(None);
+
+            if username.is_empty() {
+                validation_error.set(Some("Username is required".to_string()));
+                return false;
+            }
+
+            if password.is_empty() {
+                validation_error.set(Some("Password is required".to_string()));
+                return false;
+            }
+
+            if password.len() < 8 {
+                validation_error.set(Some("Password must be at least 8 characters".to_string()));
+                return false;
+            }
+
+            true
+        }
+    };
 
     let onsubmit = {
         let username = username.clone();
         let password = password.clone();
         let auth_state = props.auth_state.clone();
         let is_loading = is_loading.clone();
+        let validate = validate_form.clone();
 
         Callback::from(move |e: SubmitEvent| {
             e.prevent_default();
+
+            if !validate() {
+                return;
+            }
+
             let username_val = (*username).clone();
             let password_val = (*password).clone();
             let auth_state = auth_state.clone();
@@ -41,7 +75,6 @@ pub fn login(props: &LoginProps) -> Html {
                         ));
                     }
                     Err(e) => {
-                        alert(&format!("Login failed: {}", e));
                         auth_state.dispatch(AuthAction::SetError(e));
                     }
                 }
@@ -52,13 +85,29 @@ pub fn login(props: &LoginProps) -> Html {
 
     html! {
         <div class="login-container">
-            <h2>{"Login"}</h2>
-            <form {onsubmit}>
+            <h2>{"Welcome Back"}</h2>
+            <p class="login-subtitle">{"Please enter your credentials to continue"}</p>
+
+            if let Some(error) = &props.auth_state.error {
+                <div class="error-message">
+                    {error}
+                </div>
+            }
+
+            if let Some(error) = (*validation_error).clone() {
+                <div class="error-message">
+                    {error}
+                </div>
+            }
+
+            <form {onsubmit} class="login-form">
                 <div class="form-group">
                     <label for="username">{"Username"}</label>
                     <input
                         type="text"
                         id="username"
+                        class="form-input"
+                        placeholder="Enter your username"
                         value={(*username).clone()}
                         onchange={let username = username.clone(); move |e: Event| {
                             let input: HtmlInputElement = e.target_unchecked_into();
@@ -72,6 +121,8 @@ pub fn login(props: &LoginProps) -> Html {
                     <input
                         type="password"
                         id="password"
+                        class="form-input"
+                        placeholder="Enter your password"
                         value={(*password).clone()}
                         onchange={let password = password.clone(); move |e: Event| {
                             let input: HtmlInputElement = e.target_unchecked_into();
@@ -82,9 +133,11 @@ pub fn login(props: &LoginProps) -> Html {
                 </div>
                 <button
                     type="submit"
+                    class="submit-button"
                     disabled={*is_loading}
                 >
                     if *is_loading {
+                        <span class="loading-spinner"></span>
                         {"Logging in..."}
                     } else {
                         {"Login"}
