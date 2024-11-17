@@ -612,3 +612,40 @@ body {
   min-height: 400px;
   width: 100%;
 }
+
+.date-separator {
+  text-align: center;
+  margin: 1.5rem 0 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+.date-text {
+  background: var(--message-system-bg);
+  padding: 0.5rem 1rem;
+  border-radius: 1rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  display: inline-block;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+}
+
+.message-item + .message-item {
+  margin-top: 0.3rem;
+}
+
+.date-separator + .message-item {
+  margin-top: 1rem;
+}
+
+.date-separator::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: var(--border-color);
+  z-index: -1;
+}

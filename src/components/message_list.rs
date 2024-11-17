@@ -52,6 +52,20 @@ pub fn message_list(props: &MessageListProps) -> Html {
         })
     };
 
+    // Formatting functions can remain inside the component
+    fn format_date(timestamp: f64) -> String {
+        let now = Local::now();
+        let message_date = Local.timestamp_millis_opt(timestamp as i64).unwrap();
+
+        if message_date.date_naive() == now.date_naive() {
+            "Today".to_string()
+        } else if message_date.date_naive() == now.date_naive().pred_opt().unwrap() {
+            "Yesterday".to_string()
+        } else {
+            message_date.format("%B %d, %Y").to_string()
+        }
+    }
+
     html! {
         <div class="message-list-container">
             <div
@@ -59,75 +73,101 @@ pub fn message_list(props: &MessageListProps) -> Html {
                 class="message-list"
                 {onscroll}
             >
-                if props.is_loading {
-                    // Show 5 skeleton messages while loading
-                    { for (0..5).map(|i| {
-                        html! {
-                            <div class="message-skeleton" key={i} />
-                        }
-                    })}
-                } else {
-                    { for props.messages.iter().map(|msg| {
-                        let message_class = match msg.message_type {
-                            MessageType::System => "system",
-                            MessageType::Text => {
-                                if msg.author == props.current_user_id { "sent" } else { "received" }
+                {
+                    if props.is_loading {
+                        (0..5).map(|i| {
+                            html! {
+                                <div class="message-skeleton" key={i} />
                             }
-                            MessageType::Error => "error",
-                        };
-
+                        }).collect::<Html>()
+                    } else {
                         html! {
-                            <div
-                                class={classes!("message-item", message_class)}
-                                key={msg.message_id.clone()}
-                            >
-                                if msg.message_type != MessageType::System {
-                                    <div class="message-header">
-                                        <span class="author">{ &msg.author }</span>
-                                        {" • "}
-                                        <span class="timestamp">
-                                            { format_timestamp(msg.timestamp) }
-                                        </span>
-                                    </div>
-                                }
-                                <div class="message-content">
-                                    { &msg.content }
-                                </div>
-                                if msg.message_type == MessageType::Text {
-                                    <div
-                                        class={classes!(
-                                            "message-status",
-                                            msg.status.to_string().to_lowercase()
-                                        )}
-                                    >
-                                        { get_status_icon(&msg.status) }
-                                    </div>
+                            <div>
+                                {
+                                    {
+                                        let mut current_date = String::new();
+                                        props.messages.iter().map(|msg| {
+                                            let mut elements = Vec::new();
+                                            let msg_date = format_date(msg.timestamp);
+
+                                            if msg_date != current_date {
+                                                current_date = msg_date.clone();
+                                                elements.push(html! {
+                                                    <div class="date-separator">
+                                                        <span class="date-text">{ msg_date }</span>
+                                                    </div>
+                                                });
+                                            }
+
+                                            let message_class = match msg.message_type {
+                                                MessageType::System => "system",
+                                                MessageType::Text => {
+                                                    if msg.author == props.current_user_id { "sent" } else { "received" }
+                                                }
+                                                MessageType::Error => "error",
+                                            };
+
+                                            elements.push(html! {
+                                                <div
+                                                    class={classes!("message-item", message_class)}
+                                                    key={msg.message_id.clone()}
+                                                >
+                                                    {
+                                                        if msg.message_type != MessageType::System {
+                                                            html! {
+                                                                <div class="message-header">
+                                                                    <span class="author">{ &msg.author }</span>
+                                                                    {" • "}
+                                                                    <span class="timestamp">
+                                                                        { format_timestamp(msg.timestamp) }
+                                                                    </span>
+                                                                </div>
+                                                            }
+                                                        } else {
+                                                            html! {}
+                                                        }
+                                                    }
+                                                    <div class="message-content">
+                                                        { &msg.content }
+                                                    </div>
+                                                    {
+                                                        if msg.message_type == MessageType::Text {
+                                                            html! {
+                                                                <div
+                                                                    class={classes!(
+                                                                        "message-status",
+                                                                        msg.status.to_string().to_lowercase()
+                                                                    )}
+                                                                >
+                                                                    { get_status_icon(&msg.status) }
+                                                                </div>
+                                                            }
+                                                        } else {
+                                                            html! {}
+                                                        }
+                                                    }
+                                                </div>
+                                            });
+
+                                            elements
+                                        }).collect::<Vec<_>>().into_iter().flatten().collect::<Html>()
+                                    }
                                 }
                             </div>
                         }
-                    }) }
+                    }
                 }
             </div>
-
-            // New messages indicator
-            if *new_messages > 0 && !*auto_scroll {
-                <div
-                    class="new-messages-indicator"
-                    onclick={
-                        let list_ref = list_ref.clone();
-                        let new_messages = new_messages.clone();
-                        let auto_scroll = auto_scroll.clone();
-                        Callback::from(move |_| {
-                            if let Some(list) = list_ref.cast::<HtmlElement>() {
-                                list.scroll_to_with_x_and_y(0.0, list.scroll_height() as f64);
-                                new_messages.set(0);
-                                auto_scroll.set(true);
-                            }
-                        })
+            {
+                if *new_messages > 0 && !*auto_scroll {
+                    html! {
+                        <div class="new-messages-indicator">
+                            { format!("{} new messages ↓", *new_messages) }
+                        </div>
                     }
-                >
-                    { format!("{} new messages ↓", *new_messages) }
-                </div>
+                } else {
+                    html! {}
+                }
             }
         </div>
     }
