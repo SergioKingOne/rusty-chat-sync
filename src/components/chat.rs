@@ -102,6 +102,7 @@ pub fn chat(props: &ChatProps) -> Html {
             <MessageList
                 messages={chat_state.messages.clone()}
                 current_user_id={props.auth_state.user_id.clone().unwrap_or_default()}
+                is_loading={chat_state.is_loading}
             />
             <MessageInput on_send={
                 let chat_state = chat_state.clone();

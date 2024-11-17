@@ -7,6 +7,7 @@ use yew::prelude::*;
 pub struct MessageListProps {
     pub messages: Vec<Message>,
     pub current_user_id: String,
+    pub is_loading: bool,
 }
 
 #[function_component(MessageList)]
@@ -58,45 +59,54 @@ pub fn message_list(props: &MessageListProps) -> Html {
                 class="message-list"
                 {onscroll}
             >
-                { for props.messages.iter().map(|msg| {
-                    let message_class = match msg.message_type {
-                        MessageType::System => "system",
-                        MessageType::Text => {
-                            if msg.author == props.current_user_id { "sent" } else { "received" }
+                if props.is_loading {
+                    // Show 5 skeleton messages while loading
+                    { for (0..5).map(|i| {
+                        html! {
+                            <div class="message-skeleton" key={i} />
                         }
-                        MessageType::Error => "error",
-                    };
+                    })}
+                } else {
+                    { for props.messages.iter().map(|msg| {
+                        let message_class = match msg.message_type {
+                            MessageType::System => "system",
+                            MessageType::Text => {
+                                if msg.author == props.current_user_id { "sent" } else { "received" }
+                            }
+                            MessageType::Error => "error",
+                        };
 
-                    html! {
-                        <div
-                            class={classes!("message-item", message_class)}
-                            key={msg.message_id.clone()}
-                        >
-                            if msg.message_type != MessageType::System {
-                                <div class="message-header">
-                                    <span class="author">{ &msg.author }</span>
-                                    {" • "}
-                                    <span class="timestamp">
-                                        { format_timestamp(msg.timestamp) }
-                                    </span>
+                        html! {
+                            <div
+                                class={classes!("message-item", message_class)}
+                                key={msg.message_id.clone()}
+                            >
+                                if msg.message_type != MessageType::System {
+                                    <div class="message-header">
+                                        <span class="author">{ &msg.author }</span>
+                                        {" • "}
+                                        <span class="timestamp">
+                                            { format_timestamp(msg.timestamp) }
+                                        </span>
+                                    </div>
+                                }
+                                <div class="message-content">
+                                    { &msg.content }
                                 </div>
-                            }
-                            <div class="message-content">
-                                { &msg.content }
+                                if msg.message_type == MessageType::Text {
+                                    <div
+                                        class={classes!(
+                                            "message-status",
+                                            msg.status.to_string().to_lowercase()
+                                        )}
+                                    >
+                                        { get_status_icon(&msg.status) }
+                                    </div>
+                                }
                             </div>
-                            if msg.message_type == MessageType::Text {
-                                <div
-                                    class={classes!(
-                                        "message-status",
-                                        msg.status.to_string().to_lowercase()
-                                    )}
-                                >
-                                    { get_status_icon(&msg.status) }
-                                </div>
-                            }
-                        </div>
-                    }
-                }) }
+                        }
+                    }) }
+                }
             </div>
 
             // New messages indicator
