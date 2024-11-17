@@ -18,6 +18,10 @@
 ========================================= */
 body {
   margin: 0;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
     Ubuntu, sans-serif;
   background: var(--background-color);
@@ -253,9 +257,9 @@ body {
    Login Components
 ========================================= */
 .login-container {
-  max-width: 400px;
-  margin: 4rem auto;
-  padding: 2.5rem;
+  max-width: 550px;
+  width: 90%;
+  padding: 4rem;
   background: white;
   border-radius: 12px;
   box-shadow: var(--shadow-md);
@@ -264,7 +268,7 @@ body {
 .login-container h2 {
   margin: 0 0 0.5rem;
   color: var(--primary-color);
-  font-size: 1.75rem;
+  font-size: 2.25rem;
   text-align: center;
 }
 
@@ -272,24 +276,42 @@ body {
   text-align: center;
   color: #666;
   margin-bottom: 2rem;
+  font-size: 1.1rem;
 }
 
 .login-form {
-  margin-top: 1.5rem;
+  margin-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  color: var(--primary-color);
+  font-weight: 500;
+  font-size: 1.1rem;
 }
 
 .form-input {
   width: 100%;
-  padding: 0.75rem;
+  padding: 1rem;
   border: 2px solid var(--background-color);
   border-radius: 8px;
-  font-size: 1rem;
-  transition: border-color 0.2s ease;
+  font-size: 1.1rem;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
 }
 
 .form-input:focus {
   border-color: var(--secondary-color);
   outline: none;
+  box-shadow: 0 0 0 1px var(--secondary-color);
 }
 
 .form-input::placeholder {
@@ -297,13 +319,14 @@ body {
 }
 
 .submit-button {
+  margin-top: 0.5rem;
   width: 100%;
-  padding: 0.875rem;
+  padding: 1rem;
   background: var(--secondary-color);
   color: white;
   border: none;
   border-radius: 8px;
-  font-size: 1rem;
+  font-size: 1.1rem;
   font-weight: 600;
   cursor: pointer;
   transition: background-color 0.2s ease;
@@ -432,5 +455,25 @@ body {
 @keyframes spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+/* Responsive adjustments */
+@media (min-width: 768px) {
+  .login-container {
+    padding: 4.5rem;
+    max-width: 580px;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-container {
+    width: 95%;
+    padding: 2.5rem;
+    margin: 1rem;
+  }
+
+  .login-container h2 {
+    font-size: 1.75rem;
   }
 }
