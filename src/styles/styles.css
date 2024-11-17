@@ -621,7 +621,7 @@ body {
 }
 
 .date-text {
-  background: var(--message-system-bg);
+  background: rgb(82, 34, 88);
   padding: 0.5rem 1rem;
   border-radius: 1rem;
   font-size: 0.8rem;
@@ -629,6 +629,8 @@ body {
   display: inline-block;
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--border-color);
+  position: relative;
+  z-index: 2;
 }
 
 .message-item + .message-item {
@@ -647,5 +649,5 @@ body {
   top: 50%;
   height: 1px;
   background: var(--border-color);
-  z-index: -1;
+  z-index: 1;
 }
