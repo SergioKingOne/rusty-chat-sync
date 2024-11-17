@@ -30,14 +30,48 @@ pub fn sign_up(props: &SignUpProps) -> Html {
     let form_error = use_state(|| Option::<String>::None);
 
     // Real-time username validation
-    let on_username_change = {
+    let on_username_input = {
         let username = username.clone();
+        Callback::from(move |e: InputEvent| {
+            let input: HtmlInputElement = e.target_unchecked_into();
+            username.set(input.value());
+        })
+    };
+
+    // Real-time email validation
+    let on_email_input = {
+        let email = email.clone();
+        Callback::from(move |e: InputEvent| {
+            let input: HtmlInputElement = e.target_unchecked_into();
+            email.set(input.value());
+        })
+    };
+
+    // Real-time password validation
+    let on_password_input = {
+        let password = password.clone();
+        Callback::from(move |e: InputEvent| {
+            let input: HtmlInputElement = e.target_unchecked_into();
+            password.set(input.value());
+        })
+    };
+
+    // Real-time confirm password validation
+    let on_confirm_password_input = {
+        let confirm_password = confirm_password.clone();
+        Callback::from(move |e: InputEvent| {
+            let input: HtmlInputElement = e.target_unchecked_into();
+            confirm_password.set(input.value());
+        })
+    };
+
+    // Add onchange handlers for validation
+    let on_username_change = {
         let username_error = username_error.clone();
 
         Callback::from(move |e: Event| {
             let input: HtmlInputElement = e.target_unchecked_into();
             let value = input.value();
-            username.set(value.clone());
 
             if value.is_empty() {
                 username_error.set(Some("Username is required".to_string()));
@@ -49,72 +83,19 @@ pub fn sign_up(props: &SignUpProps) -> Html {
         })
     };
 
-    // Real-time email validation
     let on_email_change = {
-        let email = email.clone();
         let email_error = email_error.clone();
 
         Callback::from(move |e: Event| {
             let input: HtmlInputElement = e.target_unchecked_into();
             let value = input.value();
-            email.set(value.clone());
 
             if value.is_empty() {
                 email_error.set(Some("Email is required".to_string()));
             } else if !value.contains('@') {
-                email_error.set(Some("Please enter a valid email address".to_string()));
+                email_error.set(Some("Invalid email format".to_string()));
             } else {
                 email_error.set(None);
-            }
-        })
-    };
-
-    // Real-time password validation
-    let on_password_change = {
-        let password = password.clone();
-        let password_error = password_error.clone();
-        let confirm_password = confirm_password.clone();
-        let confirm_password_error = confirm_password_error.clone();
-
-        Callback::from(move |e: Event| {
-            let input: HtmlInputElement = e.target_unchecked_into();
-            let value = input.value();
-            password.set(value.clone());
-
-            if value.is_empty() {
-                password_error.set(Some("Password is required".to_string()));
-            } else if value.len() < 8 {
-                password_error.set(Some("Password must be at least 8 characters".to_string()));
-            } else {
-                password_error.set(None);
-            }
-
-            // Validate confirm password if it's not empty
-            if !(*confirm_password).is_empty() && value != *confirm_password {
-                confirm_password_error.set(Some("Passwords do not match".to_string()));
-            } else {
-                confirm_password_error.set(None);
-            }
-        })
-    };
-
-    // Real-time confirm password validation
-    let on_confirm_password_change = {
-        let confirm_password = confirm_password.clone();
-        let confirm_password_error = confirm_password_error.clone();
-        let password = password.clone();
-
-        Callback::from(move |e: Event| {
-            let input: HtmlInputElement = e.target_unchecked_into();
-            let value = input.value();
-            confirm_password.set(value.clone());
-
-            if value.is_empty() {
-                confirm_password_error.set(Some("Please confirm your password".to_string()));
-            } else if value != *password {
-                confirm_password_error.set(Some("Passwords do not match".to_string()));
-            } else {
-                confirm_password_error.set(None);
             }
         })
     };
@@ -168,6 +149,24 @@ pub fn sign_up(props: &SignUpProps) -> Html {
         })
     };
 
+    let is_form_valid = {
+        let username = username.clone();
+        let email = email.clone();
+        let password = password.clone();
+        let confirm_password = confirm_password.clone();
+
+        move || {
+            !username.is_empty()
+                && !email.is_empty()
+                && !password.is_empty()
+                && !confirm_password.is_empty()
+                && password.as_str() == confirm_password.as_str()
+                && email.contains('@')
+                && username.len() >= 3
+                && password.len() >= 8
+        }
+    };
+
     html! {
         if let Some(username) = (*signed_up_username).clone() {
             <ConfirmSignUp
@@ -206,6 +205,7 @@ pub fn sign_up(props: &SignUpProps) -> Html {
                             )}
                             placeholder="Choose a username"
                             value={(*username).clone()}
+                            oninput={on_username_input}
                             onchange={on_username_change}
                             disabled={*is_loading}
                         />
@@ -228,6 +228,7 @@ pub fn sign_up(props: &SignUpProps) -> Html {
                             )}
                             placeholder="Enter your email"
                             value={(*email).clone()}
+                            oninput={on_email_input}
                             onchange={on_email_change}
                             disabled={*is_loading}
                         />
@@ -250,7 +251,7 @@ pub fn sign_up(props: &SignUpProps) -> Html {
                             )}
                             placeholder="Create a password"
                             value={(*password).clone()}
-                            onchange={on_password_change}
+                            oninput={on_password_input}
                             disabled={*is_loading}
                         />
                         if let Some(error) = (*password_error).clone() {
@@ -272,7 +273,7 @@ pub fn sign_up(props: &SignUpProps) -> Html {
                             )}
                             placeholder="Confirm your password"
                             value={(*confirm_password).clone()}
-                            onchange={on_confirm_password_change}
+                            oninput={on_confirm_password_input}
                             disabled={*is_loading}
                         />
                         if let Some(error) = (*confirm_password_error).clone() {
@@ -283,11 +284,7 @@ pub fn sign_up(props: &SignUpProps) -> Html {
                     <button
                         type="submit"
                         class="submit-button"
-                        disabled={*is_loading ||
-                                username_error.is_some() ||
-                                email_error.is_some() ||
-                                password_error.is_some() ||
-                                confirm_password_error.is_some()}
+                        disabled={*is_loading || !is_form_valid()}
                     >
                         if *is_loading {
                             <span class="loading-spinner"></span>

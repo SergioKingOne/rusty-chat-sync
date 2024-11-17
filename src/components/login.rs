@@ -17,15 +17,30 @@ pub fn login(props: &LoginProps) -> Html {
     let username_error = use_state(|| Option::<String>::None);
     let password_error = use_state(|| Option::<String>::None);
 
-    // Real-time username validation
-    let on_username_change = {
+    // Just update state on input
+    let on_username_input = {
         let username = username.clone();
+        Callback::from(move |e: InputEvent| {
+            let input: HtmlInputElement = e.target_unchecked_into();
+            username.set(input.value());
+        })
+    };
+
+    let on_password_input = {
+        let password = password.clone();
+        Callback::from(move |e: InputEvent| {
+            let input: HtmlInputElement = e.target_unchecked_into();
+            password.set(input.value());
+        })
+    };
+
+    // Validate on change
+    let on_username_change = {
         let username_error = username_error.clone();
 
         Callback::from(move |e: Event| {
             let input: HtmlInputElement = e.target_unchecked_into();
             let value = input.value();
-            username.set(value.clone());
 
             if value.is_empty() {
                 username_error.set(Some("Username is required".to_string()));
@@ -37,15 +52,12 @@ pub fn login(props: &LoginProps) -> Html {
         })
     };
 
-    // Real-time password validation
     let on_password_change = {
-        let password = password.clone();
         let password_error = password_error.clone();
 
         Callback::from(move |e: Event| {
             let input: HtmlInputElement = e.target_unchecked_into();
             let value = input.value();
-            password.set(value.clone());
 
             if value.is_empty() {
                 password_error.set(Some("Password is required".to_string()));
@@ -55,6 +67,19 @@ pub fn login(props: &LoginProps) -> Html {
                 password_error.set(None);
             }
         })
+    };
+
+    // Real-time form validation for button
+    let is_form_valid = {
+        let username = username.clone();
+        let password = password.clone();
+
+        move || {
+            !username.is_empty()
+                && !password.is_empty()
+                && username.len() >= 3
+                && password.len() >= 8
+        }
     };
 
     let onsubmit = {
@@ -128,6 +153,7 @@ pub fn login(props: &LoginProps) -> Html {
                         )}
                         placeholder="Enter your username"
                         value={(*username).clone()}
+                        oninput={on_username_input}
                         onchange={on_username_change}
                         disabled={*is_loading}
                     />
@@ -146,6 +172,7 @@ pub fn login(props: &LoginProps) -> Html {
                         )}
                         placeholder="Enter your password"
                         value={(*password).clone()}
+                        oninput={on_password_input}
                         onchange={on_password_change}
                         disabled={*is_loading}
                     />
@@ -153,7 +180,7 @@ pub fn login(props: &LoginProps) -> Html {
                 <button
                     type="submit"
                     class="submit-button"
-                    disabled={*is_loading}
+                    disabled={*is_loading || !is_form_valid()}
                 >
                     if *is_loading {
                         <span class="loading-spinner"></span>
