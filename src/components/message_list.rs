@@ -8,6 +8,9 @@ pub struct MessageListProps {
     pub messages: Vec<Message>,
     pub current_user_id: String,
     pub is_loading: bool,
+    pub on_scroll: Callback<(f64, f64, f64)>,
+    pub show_scroll_button: bool,
+    pub on_scroll_to_bottom: Callback<MouseEvent>,
 }
 
 #[function_component(MessageList)]
@@ -39,6 +42,7 @@ pub fn message_list(props: &MessageListProps) -> Html {
     let onscroll = {
         let list_ref = list_ref.clone();
         let auto_scroll = auto_scroll.clone();
+        let on_scroll = props.on_scroll.clone();
 
         Callback::from(move |_| {
             if let Some(list) = list_ref.cast::<HtmlElement>() {
@@ -48,6 +52,7 @@ pub fn message_list(props: &MessageListProps) -> Html {
 
                 // Enable auto-scroll when user scrolls to bottom
                 auto_scroll.set(scroll_top + client_height >= scroll_height - 10.0);
+                on_scroll.emit((scroll_top, scroll_height, client_height));
             }
         })
     };
@@ -168,6 +173,14 @@ pub fn message_list(props: &MessageListProps) -> Html {
                 } else {
                     html! {}
                 }
+            }
+            if props.show_scroll_button {
+                <button
+                    class="scroll-bottom-button"
+                    onclick={let cb = props.on_scroll_to_bottom.clone(); move |e: MouseEvent| cb.emit(e)}
+                >
+                    {"↓"}
+                </button>
             }
         </div>
     }

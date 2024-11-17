@@ -13,6 +13,7 @@ use crate::state::chat_state::{ChatAction, ChatState};
 use crate::utils::graphql_client::GraphQLClient;
 use crate::utils::websocket::AppSyncWebSocket;
 use std::rc::Rc;
+use wasm_bindgen::JsCast;
 use yew::prelude::*;
 
 #[derive(Properties, PartialEq)]
@@ -30,6 +31,33 @@ pub fn chat(props: &ChatProps) -> Html {
     });
 
     let ws = use_state(|| None::<Rc<AppSyncWebSocket>>);
+    let show_scroll_bottom = use_state(|| false);
+
+    // Add scroll handler to MessageList
+    let on_scroll = {
+        let show_scroll_bottom = show_scroll_bottom.clone();
+
+        Callback::from(move |scroll_info: (f64, f64, f64)| {
+            let (scroll_top, scroll_height, client_height) = scroll_info;
+            // Show button when not at bottom (with small threshold)
+            show_scroll_bottom.set(scroll_top + client_height < scroll_height - 50.0);
+        })
+    };
+
+    // Add scroll to bottom handler
+    let scroll_to_bottom = {
+        Callback::from(move |e: MouseEvent| {
+            e.prevent_default();
+            if let Some(list) = web_sys::window()
+                .and_then(|w| w.document())
+                .and_then(|d| d.query_selector(".message-list").ok())
+                .flatten()
+            {
+                let list: web_sys::HtmlElement = list.dyn_into().unwrap();
+                list.scroll_to_with_x_and_y(0.0, list.scroll_height() as f64);
+            }
+        })
+    };
 
     // Initialize chat and subscription
     {
@@ -103,6 +131,9 @@ pub fn chat(props: &ChatProps) -> Html {
                 messages={chat_state.messages.clone()}
                 current_user_id={props.auth_state.user_id.clone().unwrap_or_default()}
                 is_loading={chat_state.is_loading}
+                on_scroll={on_scroll}
+                show_scroll_button={*show_scroll_bottom}
+                on_scroll_to_bottom={scroll_to_bottom}
             />
             <MessageInput on_send={
                 let chat_state = chat_state.clone();
