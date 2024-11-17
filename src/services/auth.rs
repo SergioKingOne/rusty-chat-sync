@@ -19,6 +19,7 @@ pub struct AuthResponse {
     pub id_token: String,
     #[serde(rename = "AccessToken")]
     pub access_token: String,
+    pub username: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -97,6 +98,7 @@ impl AuthService {
     }
 
     pub async fn login(&self, username: String, password: String) -> Result<AuthResponse, String> {
+        let username_clone = username.clone();
         let auth_request = AuthRequest {
             auth_flow: AUTH_FLOW.to_string(),
             client_id: CLIENT_ID.to_string(),
@@ -133,6 +135,7 @@ impl AuthService {
             let auth_response = AuthResponse {
                 id_token: cognito_response.authentication_result.id_token,
                 access_token: cognito_response.authentication_result.access_token,
+                username: username_clone,
             };
 
             // Store tokens in localStorage
@@ -231,7 +234,7 @@ impl AuthService {
     }
 
     pub fn get_stored_auth() -> Option<AuthResponse> {
-        LocalStorage::get(STORAGE_KEY).ok()
+        LocalStorage::get::<AuthResponse>(STORAGE_KEY).ok()
     }
 
     pub fn logout() {

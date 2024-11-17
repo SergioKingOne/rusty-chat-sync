@@ -6,6 +6,7 @@ use yew::prelude::*;
 #[derive(Properties, PartialEq)]
 pub struct MessageInputProps {
     pub on_send: Callback<Message>,
+    pub user_id: String,
 }
 
 #[function_component(MessageInput)]
@@ -23,12 +24,13 @@ pub fn message_input(props: &MessageInputProps) -> Html {
     let send_message = {
         let content = content.clone();
         let on_send = props.on_send.clone();
+        let username = props.user_id.clone();
         move || {
             if !content.is_empty() {
                 let message = Message {
                     message_id: Uuid::new_v4().to_string(),
                     content: (*content).clone(),
-                    author: "User".to_string(), // TODO: Replace with actual user
+                    author: username.clone(),
                     status: MessageStatus::Sending,
                     message_type: MessageType::Text,
                     timestamp: js_sys::Date::now(),

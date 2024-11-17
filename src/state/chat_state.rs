@@ -27,7 +27,17 @@ impl Reducible for ChatState {
 
         match action {
             ChatAction::AddMessage(msg) => {
-                next_state.messages.push(msg);
+                let exists = next_state
+                    .messages
+                    .iter()
+                    .any(|m| m.message_id == msg.message_id);
+
+                if !exists {
+                    next_state.messages.push(msg);
+                    next_state
+                        .messages
+                        .sort_by(|a, b| a.timestamp.partial_cmp(&b.timestamp).unwrap());
+                }
             }
             ChatAction::UpdateMessageStatus(id, status) => {
                 if let Some(msg) = next_state.messages.iter_mut().find(|m| m.message_id == id) {
@@ -49,10 +59,15 @@ impl Reducible for ChatState {
             ChatAction::UpdateMessage(id, new_message) => {
                 if let Some(msg) = next_state.messages.iter_mut().find(|m| m.message_id == id) {
                     *msg = new_message;
+                    msg.status = MessageStatus::Sent;
                 }
+                next_state
+                    .messages
+                    .sort_by(|a, b| a.timestamp.partial_cmp(&b.timestamp).unwrap());
             }
         }
 
-        Rc::new(next_state)
+        let new_state = Rc::new(next_state);
+        new_state
     }
 }

@@ -5,11 +5,14 @@ use crate::graphql::mutations::{
     CreateMessageResponse, CreateMessageVariables, CREATE_MESSAGE_MUTATION,
 };
 use crate::graphql::queries::{ListMessagesData, LIST_MESSAGES_QUERY};
+use crate::graphql::subscriptions::{SubscriptionPayload, ON_CREATE_MESSAGE_SUBSCRIPTION};
 use crate::graphql::types::GraphQLResponse;
 use crate::models::message::{Message, MessageStatus};
 use crate::state::auth_state::AuthState;
 use crate::state::chat_state::{ChatAction, ChatState};
 use crate::utils::graphql_client::GraphQLClient;
+use crate::utils::websocket::AppSyncWebSocket;
+use std::rc::Rc;
 use yew::prelude::*;
 
 #[derive(Properties, PartialEq)]
@@ -26,18 +29,54 @@ pub fn chat(props: &ChatProps) -> Html {
         error: None,
     });
 
-    // Initialize chat
+    let ws = use_state(|| None::<Rc<AppSyncWebSocket>>);
+
+    // Initialize chat and subscription
     {
         let chat_state = chat_state.clone();
         let token = props.auth_state.token.clone();
+        let ws = ws.clone();
+
         use_effect_with((), move |_| {
             if let Some(token) = token {
-                let chat_state = chat_state.clone();
+                let token = token.clone();
+                let token_for_fetch = token.clone();
+                let token_for_sub = token.clone();
+
+                let chat_state_for_fetch = chat_state.clone();
+
+                // Fetch initial messages
                 wasm_bindgen_futures::spawn_local(async move {
-                    fetch_messages(&chat_state, &token).await;
+                    fetch_messages(&chat_state_for_fetch, &token_for_fetch).await;
                 });
+
+                // Setup subscription
+                let chat_state_for_sub = chat_state.clone();
+
+                let websocket = AppSyncWebSocket::new(
+                    "wss://4psoayuvcnfu7ekadjzgs6erli.appsync-realtime-api.us-east-1.amazonaws.com/graphql",
+                    &token_for_sub,
+                    ON_CREATE_MESSAGE_SUBSCRIPTION,
+                    move |payload| {
+                        if let Ok(subscription_payload) = serde_json::from_value::<SubscriptionPayload>(payload.clone()) {
+                            let message_data = subscription_payload.data.on_create_message.into_message_data();
+                            let new_message = Message::from_message_data(message_data);
+                            chat_state_for_sub.dispatch(ChatAction::AddMessage(new_message));
+                        } else {
+                            web_sys::console::log_1(&format!("Failed to parse subscription payload: {:?}", payload).into());
+                        }
+                    },
+                );
+                ws.set(Some(Rc::new(websocket)));
             }
-            || ()
+
+            // Cleanup subscription on unmount
+            let ws = ws.clone();
+            move || {
+                if let Some(websocket) = (*ws).clone() {
+                    websocket.close();
+                }
+            }
         });
     }
 
@@ -60,7 +99,10 @@ pub fn chat(props: &ChatProps) -> Html {
                     }
                 />
             </div>
-            <MessageList messages={chat_state.messages.clone()} />
+            <MessageList
+                messages={chat_state.messages.clone()}
+                current_user_id={props.auth_state.user_id.clone().unwrap_or_default()}
+            />
             <MessageInput on_send={
                 let chat_state = chat_state.clone();
                 let token = props.auth_state.token.clone();
@@ -71,7 +113,7 @@ pub fn chat(props: &ChatProps) -> Html {
                         chat_state.dispatch(ChatAction::SetError("Not authenticated".to_string()));
                     }
                 })
-            } />
+            } user_id={props.auth_state.user_id.clone().unwrap_or("sergio".to_string())} />
         </div>
     }
 }
@@ -95,12 +137,14 @@ async fn fetch_messages(chat_state: &UseReducerHandle<ChatState>, token: &str) {
             };
 
             if let Some(data) = result.data {
-                chat_state.dispatch(ChatAction::SetMessages(
-                    data.list_messages
-                        .into_iter()
-                        .map(Message::from_message_data)
-                        .collect(),
-                ));
+                let mut messages: Vec<Message> = data
+                    .list_messages
+                    .into_iter()
+                    .map(Message::from_message_data)
+                    .collect();
+                // TODO: See if we can query and sort by timestamp directly from the API
+                messages.sort_by(|a, b| a.timestamp.partial_cmp(&b.timestamp).unwrap());
+                chat_state.dispatch(ChatAction::SetMessages(messages));
             } else if let Some(errors) = result.errors {
                 chat_state.dispatch(ChatAction::SetError(errors[0].message.clone()));
             }
