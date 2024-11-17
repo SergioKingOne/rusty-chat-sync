@@ -14,34 +14,47 @@ pub fn login(props: &LoginProps) -> Html {
     let username = use_state(|| String::new());
     let password = use_state(|| String::new());
     let is_loading = use_state(|| false);
-    let validation_error = use_state(|| Option::<String>::None);
+    let username_error = use_state(|| Option::<String>::None);
+    let password_error = use_state(|| Option::<String>::None);
 
-    // Add validation before submission
-    let validate_form = {
+    // Real-time username validation
+    let on_username_change = {
         let username = username.clone();
+        let username_error = username_error.clone();
+
+        Callback::from(move |e: Event| {
+            let input: HtmlInputElement = e.target_unchecked_into();
+            let value = input.value();
+            username.set(value.clone());
+
+            if value.is_empty() {
+                username_error.set(Some("Username is required".to_string()));
+            } else if value.len() < 3 {
+                username_error.set(Some("Username must be at least 3 characters".to_string()));
+            } else {
+                username_error.set(None);
+            }
+        })
+    };
+
+    // Real-time password validation
+    let on_password_change = {
         let password = password.clone();
-        let validation_error = validation_error.clone();
+        let password_error = password_error.clone();
 
-        move || {
-            validation_error.set(None);
+        Callback::from(move |e: Event| {
+            let input: HtmlInputElement = e.target_unchecked_into();
+            let value = input.value();
+            password.set(value.clone());
 
-            if username.is_empty() {
-                validation_error.set(Some("Username is required".to_string()));
-                return false;
+            if value.is_empty() {
+                password_error.set(Some("Password is required".to_string()));
+            } else if value.len() < 8 {
+                password_error.set(Some("Password must be at least 8 characters".to_string()));
+            } else {
+                password_error.set(None);
             }
-
-            if password.is_empty() {
-                validation_error.set(Some("Password is required".to_string()));
-                return false;
-            }
-
-            if password.len() < 8 {
-                validation_error.set(Some("Password must be at least 8 characters".to_string()));
-                return false;
-            }
-
-            true
-        }
+        })
     };
 
     let onsubmit = {
@@ -49,12 +62,18 @@ pub fn login(props: &LoginProps) -> Html {
         let password = password.clone();
         let auth_state = props.auth_state.clone();
         let is_loading = is_loading.clone();
-        let validate = validate_form.clone();
+        let username_error = username_error.clone();
+        let password_error = password_error.clone();
 
         Callback::from(move |e: SubmitEvent| {
             e.prevent_default();
 
-            if !validate() {
+            // Final validation before submit
+            if username.is_empty()
+                || password.is_empty()
+                || username_error.is_some()
+                || password_error.is_some()
+            {
                 return;
             }
 
@@ -94,40 +113,40 @@ pub fn login(props: &LoginProps) -> Html {
                 </div>
             }
 
-            if let Some(error) = (*validation_error).clone() {
-                <div class="error-message">
-                    {error}
-                </div>
-            }
-
             <form {onsubmit} class="login-form">
-                <div class="form-group">
+                <div class={classes!(
+                    "form-group",
+                    username_error.is_some().then_some("error")
+                )}>
                     <label for="username">{"Username"}</label>
                     <input
                         type="text"
                         id="username"
-                        class="form-input"
+                        class={classes!(
+                            "form-input",
+                            username_error.is_some().then_some("error")
+                        )}
                         placeholder="Enter your username"
                         value={(*username).clone()}
-                        onchange={let username = username.clone(); move |e: Event| {
-                            let input: HtmlInputElement = e.target_unchecked_into();
-                            username.set(input.value());
-                        }}
+                        onchange={on_username_change}
                         disabled={*is_loading}
                     />
                 </div>
-                <div class="form-group">
+                <div class={classes!(
+                    "form-group",
+                    password_error.is_some().then_some("error")
+                )}>
                     <label for="password">{"Password"}</label>
                     <input
                         type="password"
                         id="password"
-                        class="form-input"
+                        class={classes!(
+                            "form-input",
+                            password_error.is_some().then_some("error")
+                        )}
                         placeholder="Enter your password"
                         value={(*password).clone()}
-                        onchange={let password = password.clone(); move |e: Event| {
-                            let input: HtmlInputElement = e.target_unchecked_into();
-                            password.set(input.value());
-                        }}
+                        onchange={on_password_change}
                         disabled={*is_loading}
                     />
                 </div>
