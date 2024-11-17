@@ -114,6 +114,10 @@ body {
   color: var(--text-primary);
   border: 1px solid rgba(217, 95, 89, 0.5);
   box-sizing: border-box;
+  word-wrap: break-word;
+  word-break: break-word;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
 }
 
 /* Sent Messages */
