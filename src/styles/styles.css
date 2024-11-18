@@ -132,13 +132,14 @@ body {
 
 /* Message Items */
 .message-item {
-  list-style: none;
+  width: fit-content;
+  min-width: 100px;
+  max-width: 40%;
   margin: 0.75rem 0;
   padding: 1rem 1.5rem;
   background: var(--message-bg);
   border-radius: 12px;
   box-shadow: var(--shadow-sm);
-  max-width: 80%;
   position: relative;
   animation: slideIn var(--anim-duration) ease-out;
   color: var(--text-primary);
@@ -166,6 +167,7 @@ body {
 
 /* System Messages */
 .message-item.system {
+  width: 100%;
   max-width: 100%;
   background: var(--message-system-bg);
   text-align: center;
@@ -689,15 +691,3 @@ body {
   background: var(--secondary-color);
   transform: translateY(-2px);
 }
-
-/* =========================================
-   Signup Components
-======================================== */
-
-/* Already handled above */
-
-/* =========================================
-   Animations
-======================================== */
-
-/* Already handled above */
