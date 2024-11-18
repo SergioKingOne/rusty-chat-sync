@@ -644,9 +644,9 @@ body {
 
 .date-text {
   background: rgb(67, 46, 84); /* Background color */
-  padding: 0.75rem 1.5rem;
+  padding: 1rem 2rem;
   border-radius: 1rem;
-  font-size: 0.9rem;
+  font-size: 1.2rem;
   color: var(--text-secondary);
   display: inline-block;
   box-shadow: var(--shadow-sm);
