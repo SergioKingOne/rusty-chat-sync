@@ -115,7 +115,7 @@ pub fn message_list(props: &MessageListProps) -> Html {
                                             let message_class = match msg.message_type {
                                                 MessageType::System => "system",
                                                 MessageType::Text => {
-                                                    if msg.author == props.current_user_id { "sent" } else { "received" }
+                                                    if msg.author.user_id == props.current_user_id { "sent" } else { "received" }
                                                 }
                                                 MessageType::Error => "error",
                                             };
@@ -129,11 +129,14 @@ pub fn message_list(props: &MessageListProps) -> Html {
                                                         if msg.message_type != MessageType::System {
                                                             html! {
                                                                 <div class="message-header">
-                                                                    <span class="author">{ &msg.author }</span>
+                                                                    <span class="author">{ &msg.author.username }</span>
                                                                     {" • "}
                                                                     <span class="timestamp">
                                                                         { format_timestamp(msg.timestamp) }
                                                                     </span>
+                                                                    if let Some(status) = &msg.author.status {
+                                                                        <span class="user-status">{ status }</span>
+                                                                    }
                                                                 </div>
                                                             }
                                                         } else {

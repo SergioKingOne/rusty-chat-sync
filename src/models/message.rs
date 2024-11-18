@@ -1,3 +1,4 @@
+use super::user::User;
 use crate::graphql::types::MessageData;
 use serde::{Deserialize, Serialize};
 use strum_macros::Display;
@@ -23,14 +24,14 @@ pub enum MessageType {
 pub struct Message {
     pub message_id: String,
     pub content: String,
-    pub author: String,
+    pub author: User,
     pub timestamp: f64,
     pub status: MessageStatus,
     pub message_type: MessageType,
 }
 
 impl Message {
-    pub fn new_text(content: String, author: String) -> Self {
+    pub fn new_text(content: String, author: User) -> Self {
         Self {
             message_id: uuid::Uuid::new_v4().to_string(),
             content,
@@ -45,7 +46,11 @@ impl Message {
         Self {
             message_id: uuid::Uuid::new_v4().to_string(),
             content,
-            author: "System".to_string(),
+            author: User::new(
+                "system".to_string(),
+                "System".to_string(),
+                "system@system.local".to_string(),
+            ),
             timestamp: js_sys::Date::now(),
             status: MessageStatus::Sent,
             message_type: MessageType::System,

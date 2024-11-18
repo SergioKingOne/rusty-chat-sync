@@ -1,12 +1,21 @@
-use crate::graphql::types::MessageData;
+use crate::models::user::User;
 use serde::Deserialize;
+
+use super::types::MessageData;
 
 pub const ON_CREATE_MESSAGE_SUBSCRIPTION: &str = r#"
     subscription OnCreateMessage {
         onCreateMessage {
             messageId
             content
-            author
+            author {
+                userId
+                username
+                email
+                createdAt
+                lastSeen
+                status
+            }
             timestamp
         }
     }
@@ -25,12 +34,11 @@ pub struct SubscriptionData {
 
 #[derive(Debug, Deserialize)]
 pub struct OnCreateMessageData {
-    #[serde(rename = "author")]
-    pub author: String,
-    #[serde(rename = "content")]
-    pub content: String,
     #[serde(rename = "messageId")]
     pub message_id: String,
+    #[serde(rename = "content")]
+    pub content: String,
+    pub author: User,
     #[serde(rename = "timestamp")]
     pub timestamp: f64,
 }
@@ -38,9 +46,9 @@ pub struct OnCreateMessageData {
 impl OnCreateMessageData {
     pub fn into_message_data(self) -> MessageData {
         MessageData {
-            author: self.author,
-            content: self.content,
             message_id: self.message_id,
+            content: self.content,
+            author: self.author,
             timestamp: self.timestamp,
         }
     }

@@ -2,7 +2,8 @@ use crate::components::chat_status::ChatStatus;
 use crate::components::message_input::MessageInput;
 use crate::components::message_list::MessageList;
 use crate::graphql::mutations::{
-    CreateMessageResponse, CreateMessageVariables, CREATE_MESSAGE_MUTATION,
+    CreateMessageResponse, CreateMessageVariables, UpdateUserStatusResponse,
+    UpdateUserStatusVariables, CREATE_MESSAGE_MUTATION, UPDATE_USER_STATUS_MUTATION,
 };
 use crate::graphql::queries::{ListMessagesData, LIST_MESSAGES_QUERY};
 use crate::graphql::subscriptions::{SubscriptionPayload, ON_CREATE_MESSAGE_SUBSCRIPTION};
@@ -144,6 +145,35 @@ pub fn chat(props: &ChatProps) -> Html {
         })
     };
 
+    // Add user status update
+    {
+        let auth_state = props.auth_state.clone();
+        let token = props.auth_state.token.clone();
+        let handle_token_error = handle_token_error.clone();
+        let token_for_cleanup = token.clone();
+
+        use_effect_with((), move |_| {
+            if let Some(token) = token {
+                if let Some(user_id) = auth_state.user_id.clone() {
+                    wasm_bindgen_futures::spawn_local(async move {
+                        if let Err(e) = update_user_status(&user_id, "online", &token).await {
+                            handle_token_error(&e);
+                        }
+                    });
+                }
+            }
+            move || {
+                if let Some(token) = token_for_cleanup {
+                    if let Some(user_id) = auth_state.user_id.clone() {
+                        wasm_bindgen_futures::spawn_local(async move {
+                            let _ = update_user_status(&user_id, "offline", &token).await;
+                        });
+                    }
+                }
+            }
+        });
+    }
+
     html! {
         <div class="chat-container">
             <div class="chat-header">
@@ -231,7 +261,7 @@ async fn handle_message_send(
 
     let variables = CreateMessageVariables {
         content: msg.content.clone(),
-        author: msg.author.clone(),
+        author_id: msg.author.user_id.clone(),
     };
 
     let response = client
@@ -256,4 +286,31 @@ async fn handle_message_send(
     } else {
         Err("Unknown error occurred".to_string())
     }
+}
+
+async fn update_user_status(user_id: &str, status: &str, token: &str) -> Result<(), String> {
+    let client = GraphQLClient::new()
+        .await
+        .map_err(|e| e.to_string())?
+        .with_token(token.to_string());
+
+    let variables = UpdateUserStatusVariables {
+        user_id: user_id.to_string(),
+        status: status.to_string(),
+    };
+
+    let response = client
+        .execute_query::<_, UpdateUserStatusResponse>(
+            "UpdateUserStatus",
+            UPDATE_USER_STATUS_MUTATION,
+            variables,
+        )
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if response.errors.is_some() {
+        return Err("Failed to update user status".to_string());
+    }
+
+    Ok(())
 }

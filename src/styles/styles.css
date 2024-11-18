@@ -701,3 +701,20 @@ body {
   background: var(--secondary-color);
   transform: translateY(-2px);
 }
+
+.user-status {
+  font-size: 0.8em;
+  margin-left: 0.5em;
+  padding: 0.2em 0.5em;
+  border-radius: 999px;
+  background: var(--secondary-color);
+  color: var(--text-primary);
+}
+
+.user-status.online {
+  background: #27ae60;
+}
+
+.user-status.offline {
+  background: #7f8c8d;
+}

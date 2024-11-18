@@ -1,3 +1,4 @@
+use crate::models::user::User;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -5,7 +6,7 @@ pub struct MessageData {
     #[serde(rename = "messageId")]
     pub message_id: String,
     pub content: String,
-    pub author: String,
+    pub author: User,
     pub timestamp: f64,
 }
 
