@@ -5,6 +5,8 @@ use yew::prelude::*;
 #[derive(Properties, PartialEq)]
 pub struct ConfirmSignUpProps {
     pub username: String,
+    pub email: String,
+    pub password: String,
     pub on_confirmed: Callback<()>,
     pub on_back: Callback<()>,
     #[prop_or_default]
@@ -20,6 +22,8 @@ pub fn confirm_signup(props: &ConfirmSignUpProps) -> Html {
     let onsubmit = {
         let confirmation_code = confirmation_code.clone();
         let username = props.username.clone();
+        let password = props.password.clone();
+        let email = props.email.clone();
         let is_loading = is_loading.clone();
         let error = error.clone();
         let on_confirmed = props.on_confirmed.clone();
@@ -28,6 +32,8 @@ pub fn confirm_signup(props: &ConfirmSignUpProps) -> Html {
             e.prevent_default();
             let code = (*confirmation_code).clone();
             let username = username.clone();
+            let password = password.clone();
+            let email = email.clone();
             let is_loading = is_loading.clone();
             let error = error.clone();
             let on_confirmed = on_confirmed.clone();
@@ -37,7 +43,10 @@ pub fn confirm_signup(props: &ConfirmSignUpProps) -> Html {
                 error.set(None);
 
                 let auth_service = AuthService::new();
-                match auth_service.confirm_sign_up(username, code).await {
+                match auth_service
+                    .confirm_sign_up(username, code, password, email)
+                    .await
+                {
                     Ok(()) => {
                         on_confirmed.emit(());
                     }

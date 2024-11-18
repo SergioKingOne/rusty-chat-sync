@@ -167,6 +167,7 @@ impl AuthService {
             }],
         };
 
+        // Just do the Cognito signup first
         let request_body = serde_json::to_string(&sign_up_request)
             .map_err(|e| format!("Failed to serialize request: {}", e))?;
 
@@ -186,11 +187,6 @@ impl AuthService {
             .map_err(|e| format!("Failed to get response text: {}", e))?;
 
         if response.ok() {
-            // Create user in DynamoDB after successful Cognito signup
-            if let Err(e) = self.create_user(&username, &email).await {
-                log!("Warning: Failed to create user in DynamoDB: {}", e);
-                // Continue anyway since the Cognito user was created
-            }
             Ok(username)
         } else {
             if response_text.contains("UsernameExistsException") {
@@ -255,10 +251,12 @@ impl AuthService {
         &self,
         username: String,
         confirmation_code: String,
+        password: String,
+        email: String,
     ) -> Result<(), String> {
         let confirm_request = ConfirmSignUpRequest {
             client_id: CLIENT_ID.to_string(),
-            username,
+            username: username.clone(),
             confirmation_code,
         };
 
@@ -285,14 +283,30 @@ impl AuthService {
         log!("Confirm signup response:", &response_text);
 
         if response.ok() {
-            Ok(())
+            // After successful confirmation, login to get tokens
+            match self.login(username.clone(), password).await {
+                Ok(auth_response) => {
+                    // Now create the user in DynamoDB with the token
+                    if let Err(e) = self
+                        .create_user(&username, &email, &auth_response.id_token)
+                        .await
+                    {
+                        log!("Warning: Failed to create user in DynamoDB: {}", e);
+                    }
+                    Ok(())
+                }
+                Err(e) => Err(format!("Failed to login after confirmation: {}", e)),
+            }
         } else {
             Err(format!("Failed to confirm signup: {}", response_text))
         }
     }
 
-    async fn create_user(&self, username: &str, email: &str) -> Result<(), String> {
-        let client = GraphQLClient::new().await.map_err(|e| e.to_string())?;
+    async fn create_user(&self, username: &str, email: &str, token: &str) -> Result<(), String> {
+        let client = GraphQLClient::new()
+            .await
+            .map_err(|e| e.to_string())?
+            .with_token(token.to_string());
 
         let variables = CreateUserVariables {
             user_id: username.to_string(),

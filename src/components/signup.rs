@@ -171,6 +171,8 @@ pub fn sign_up(props: &SignUpProps) -> Html {
         if let Some(username) = (*signed_up_username).clone() {
             <ConfirmSignUp
                 username={username}
+                email={(*email).clone()}
+                password={(*password).clone()}
                 on_confirmed={
                     let on_switch_to_login = props.on_switch_to_login.clone();
                     Callback::from(move |_| on_switch_to_login.emit(()))
