@@ -3,6 +3,9 @@ use gloo::net::http::Request;
 use gloo::storage::{LocalStorage, Storage};
 use serde::{Deserialize, Serialize};
 
+use crate::graphql::mutations::{CreateUserResponse, CreateUserVariables, CREATE_USER_MUTATION};
+use crate::utils::graphql_client::GraphQLClient;
+
 const CLIENT_ID: &str = "p7c55gqav2r7633fgqfbh0rcs";
 const AUTH_ENDPOINT: &str = "https://cognito-idp.us-east-1.amazonaws.com";
 const STORAGE_KEY: &str = "auth_tokens";
@@ -160,7 +163,7 @@ impl AuthService {
             password,
             user_attributes: vec![UserAttribute {
                 name: "email".to_string(),
-                value: email,
+                value: email.clone(),
             }],
         };
 
@@ -183,11 +186,14 @@ impl AuthService {
             .map_err(|e| format!("Failed to get response text: {}", e))?;
 
         if response.ok() {
+            // Create user in DynamoDB after successful Cognito signup
+            if let Err(e) = self.create_user(&username, &email).await {
+                log!("Warning: Failed to create user in DynamoDB: {}", e);
+                // Continue anyway since the Cognito user was created
+            }
             Ok(username)
         } else {
-            // Check if the error is UsernameExistsException
             if response_text.contains("UsernameExistsException") {
-                // Try to resend the confirmation code
                 self.resend_confirmation_code(username).await
             } else {
                 Err(format!("Sign up failed: {}", response_text))
@@ -283,5 +289,26 @@ impl AuthService {
         } else {
             Err(format!("Failed to confirm signup: {}", response_text))
         }
+    }
+
+    async fn create_user(&self, username: &str, email: &str) -> Result<(), String> {
+        let client = GraphQLClient::new().await.map_err(|e| e.to_string())?;
+
+        let variables = CreateUserVariables {
+            user_id: username.to_string(),
+            username: username.to_string(),
+            email: email.to_string(),
+        };
+
+        let response = client
+            .execute_query::<_, CreateUserResponse>("CreateUser", CREATE_USER_MUTATION, variables)
+            .await
+            .map_err(|e| e.to_string())?;
+
+        if response.errors.is_some() {
+            return Err("Failed to create user in database".to_string());
+        }
+
+        Ok(())
     }
 }

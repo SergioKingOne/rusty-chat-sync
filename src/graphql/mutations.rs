@@ -31,6 +31,19 @@ pub const UPDATE_USER_STATUS_MUTATION: &str = r#"
     }
 "#;
 
+pub const CREATE_USER_MUTATION: &str = r#"
+    mutation CreateUser($userId: ID!, $username: String!, $email: String!) {
+        createUser(userId: $userId, username: $username, email: $email) {
+            userId
+            username
+            email
+            createdAt
+            lastSeen
+            status
+        }
+    }
+"#;
+
 #[derive(Serialize)]
 pub struct CreateMessageVariables {
     pub content: String,
@@ -43,6 +56,13 @@ pub struct UpdateUserStatusVariables {
     pub status: String,
 }
 
+#[derive(Serialize)]
+pub struct CreateUserVariables {
+    pub user_id: String,
+    pub username: String,
+    pub email: String,
+}
+
 #[derive(Deserialize)]
 pub struct CreateMessageResponse {
     #[serde(rename = "createMessage")]
@@ -52,4 +72,9 @@ pub struct CreateMessageResponse {
 #[derive(Deserialize)]
 pub struct UpdateUserStatusResponse {
     pub update_user_status: User,
+}
+
+#[derive(Deserialize)]
+pub struct CreateUserResponse {
+    pub create_user: User,
 }
