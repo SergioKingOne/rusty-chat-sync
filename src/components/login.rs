@@ -1,6 +1,5 @@
 use crate::services::auth::AuthService;
 use crate::state::auth_state::{AuthAction, AuthState};
-use gloo::dialogs::alert;
 use web_sys::HtmlInputElement;
 use yew::prelude::*;
 
@@ -15,15 +14,94 @@ pub fn login(props: &LoginProps) -> Html {
     let username = use_state(|| String::new());
     let password = use_state(|| String::new());
     let is_loading = use_state(|| false);
+    let username_error = use_state(|| Option::<String>::None);
+    let password_error = use_state(|| Option::<String>::None);
+
+    // Just update state on input
+    let on_username_input = {
+        let username = username.clone();
+        Callback::from(move |e: InputEvent| {
+            let input: HtmlInputElement = e.target_unchecked_into();
+            username.set(input.value());
+        })
+    };
+
+    let on_password_input = {
+        let password = password.clone();
+        Callback::from(move |e: InputEvent| {
+            let input: HtmlInputElement = e.target_unchecked_into();
+            password.set(input.value());
+        })
+    };
+
+    // Validate on change
+    let on_username_change = {
+        let username_error = username_error.clone();
+
+        Callback::from(move |e: Event| {
+            let input: HtmlInputElement = e.target_unchecked_into();
+            let value = input.value();
+
+            if value.is_empty() {
+                username_error.set(Some("Username is required".to_string()));
+            } else if value.len() < 3 {
+                username_error.set(Some("Username must be at least 3 characters".to_string()));
+            } else {
+                username_error.set(None);
+            }
+        })
+    };
+
+    let on_password_change = {
+        let password_error = password_error.clone();
+
+        Callback::from(move |e: Event| {
+            let input: HtmlInputElement = e.target_unchecked_into();
+            let value = input.value();
+
+            if value.is_empty() {
+                password_error.set(Some("Password is required".to_string()));
+            } else if value.len() < 8 {
+                password_error.set(Some("Password must be at least 8 characters".to_string()));
+            } else {
+                password_error.set(None);
+            }
+        })
+    };
+
+    // Real-time form validation for button
+    let is_form_valid = {
+        let username = username.clone();
+        let password = password.clone();
+
+        move || {
+            !username.is_empty()
+                && !password.is_empty()
+                && username.len() >= 3
+                && password.len() >= 8
+        }
+    };
 
     let onsubmit = {
         let username = username.clone();
         let password = password.clone();
         let auth_state = props.auth_state.clone();
         let is_loading = is_loading.clone();
+        let username_error = username_error.clone();
+        let password_error = password_error.clone();
 
         Callback::from(move |e: SubmitEvent| {
             e.prevent_default();
+
+            // Final validation before submit
+            if username.is_empty()
+                || password.is_empty()
+                || username_error.is_some()
+                || password_error.is_some()
+            {
+                return;
+            }
+
             let username_val = (*username).clone();
             let password_val = (*password).clone();
             let auth_state = auth_state.clone();
@@ -41,7 +119,6 @@ pub fn login(props: &LoginProps) -> Html {
                         ));
                     }
                     Err(e) => {
-                        alert(&format!("Login failed: {}", e));
                         auth_state.dispatch(AuthAction::SetError(e));
                     }
                 }
@@ -52,39 +129,61 @@ pub fn login(props: &LoginProps) -> Html {
 
     html! {
         <div class="login-container">
-            <h2>{"Login"}</h2>
-            <form {onsubmit}>
-                <div class="form-group">
+            <h2>{"Welcome Back"}</h2>
+            <p class="login-subtitle">{"Please enter your credentials to continue"}</p>
+
+            if let Some(error) = &props.auth_state.error {
+                <div class="error-message">
+                    {error}
+                </div>
+            }
+
+            <form {onsubmit} class="login-form">
+                <div class={classes!(
+                    "form-group",
+                    username_error.is_some().then_some("error")
+                )}>
                     <label for="username">{"Username"}</label>
                     <input
                         type="text"
                         id="username"
+                        class={classes!(
+                            "form-input",
+                            username_error.is_some().then_some("error")
+                        )}
+                        placeholder="Enter your username"
                         value={(*username).clone()}
-                        onchange={let username = username.clone(); move |e: Event| {
-                            let input: HtmlInputElement = e.target_unchecked_into();
-                            username.set(input.value());
-                        }}
+                        oninput={on_username_input}
+                        onchange={on_username_change}
                         disabled={*is_loading}
                     />
                 </div>
-                <div class="form-group">
+                <div class={classes!(
+                    "form-group",
+                    password_error.is_some().then_some("error")
+                )}>
                     <label for="password">{"Password"}</label>
                     <input
                         type="password"
                         id="password"
+                        class={classes!(
+                            "form-input",
+                            password_error.is_some().then_some("error")
+                        )}
+                        placeholder="Enter your password"
                         value={(*password).clone()}
-                        onchange={let password = password.clone(); move |e: Event| {
-                            let input: HtmlInputElement = e.target_unchecked_into();
-                            password.set(input.value());
-                        }}
+                        oninput={on_password_input}
+                        onchange={on_password_change}
                         disabled={*is_loading}
                     />
                 </div>
                 <button
                     type="submit"
-                    disabled={*is_loading}
+                    class="submit-button"
+                    disabled={*is_loading || !is_form_valid()}
                 >
                     if *is_loading {
+                        <span class="loading-spinner"></span>
                         {"Logging in..."}
                     } else {
                         {"Login"}

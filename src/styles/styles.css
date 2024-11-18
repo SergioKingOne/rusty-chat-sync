@@ -1,103 +1,239 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap");
+
 :root {
-  --primary-color: #2c3e50;
-  --secondary-color: #3498db;
-  --background-color: #f5f6fa;
-  --message-bg: #fff;
-  --message-sent-bg: #e3effd;
-  --message-system-bg: #f8f9fa;
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  /* Add to existing root variables */
+  --font-primary: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
+/* =========================================
+Palette.
+
+Primary: #AE445A - rgb(174, 68, 90)
+Secondary: #4B4376 - rgb(75, 67, 118)
+Background: #432E54 - rgb(67, 46, 84)
+Accent: #E8BCB9 - rgb(232, 188, 185)
+
+========================================= */
+
+/* =========================================
+   CSS Variables
+========================================= */
+:root {
+  --primary-color: #ae445a; /* Primary */
+  --secondary-color: #4b4376; /* Secondary */
+  --background-color: #432e54; /* Background */
+
+  --message-bg: rgba(75, 67, 118, 0.7); /* Secondary with opacity */
+  --message-sent-bg: rgba(174, 68, 90, 0.7); /* Primary with opacity */
+  --message-system-bg: rgba(67, 46, 84, 0.7); /* Background with opacity */
+
+  --text-primary: #ffffff;
+  --text-secondary: rgba(232, 188, 185, 0.9); /* Accent with opacity */
+
+  --shadow-sm: 0 2px 4px rgba(67, 46, 84, 0.5);
+  --shadow-md: 0 4px 6px rgba(67, 46, 84, 0.6);
+
+  --border-color: rgba(232, 188, 185, 0.7); /* Accent with opacity */
+
   --anim-duration: 0.3s;
 }
 
+/* =========================================
+   Global Styles
+========================================= */
 body {
+  font-family: var(--font-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
-    Ubuntu, sans-serif;
-  background: var(--background-color);
+  min-height: 100vh;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(
+    135deg,
+    var(--background-color) 0%,
+    var(--background-color) 30%,
+    var(--secondary-color) 70%,
+    var(--secondary-color) 100%
+  );
+  color: var(--text-primary);
 }
 
+/* =========================================
+   Chat Components
+========================================= */
+
+/* Chat Container */
 .chat-container {
-  max-width: 800px;
-  margin: 2rem auto;
-  padding: 1rem;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
-  background: white;
-}
-
-.chat-header {
   position: relative;
-  text-align: center;
-  color: var(--primary-color);
-  padding-bottom: 1rem;
-  border-bottom: 2px solid var(--background-color);
+  width: 100%;
+  height: 100vh;
+  margin: auto auto;
+  background: var(--background-color);
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
+  overflow: hidden;
 }
 
+/* Chat Header */
+.chat-header {
+  padding: 1.5rem 2rem;
+  text-align: left;
+  background: var(--primary-color);
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Chat Header Title */
+.chat-header h1 {
+  margin: 0;
+  font-size: 3rem;
+}
+
+/* Logout Button */
+.logout-button {
+  padding: 1rem 2rem;
+  background: rgba(75, 67, 118, 0.7); /* Secondary with opacity */
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--text-primary);
+  font-weight: 500;
+  transition: background 0.2s ease;
+  position: static;
+  font-size: 1.3rem;
+}
+
+.logout-button:hover {
+  background: rgba(174, 68, 90, 0.7); /* Primary with opacity */
+}
+
+/* Message List */
 .message-list {
-  height: 400px;
+  flex: 1;
   overflow-y: auto;
   padding: 1rem;
-  margin: 1rem 0;
   scroll-behavior: smooth;
+  background: rgba(67, 46, 84, 0.5); /* Background with opacity */
+  width: 100%;
+  box-sizing: border-box;
 }
 
+/* Custom Scrollbar for Message List */
 .message-list::-webkit-scrollbar {
   width: 6px;
 }
 
 .message-list::-webkit-scrollbar-track {
-  background: var(--background-color);
+  background: rgba(67, 46, 84, 0.5); /* Background with opacity */
 }
 
 .message-list::-webkit-scrollbar-thumb {
-  background: #cbd5e0;
+  background: rgba(174, 68, 90, 0.7); /* Primary with opacity */
   border-radius: 3px;
 }
 
+.message-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(232, 188, 185, 0.8); /* Accent with opacity */
+}
+
+/* Message Items */
 .message-item {
-  list-style: none;
-  margin: 0.5rem 0;
-  padding: 0.75rem 1rem;
+  width: fit-content;
+  min-width: 100px;
+  max-width: 40%;
+  margin: 0.75rem 0;
+  padding: 1.5rem 2.5rem;
   background: var(--message-bg);
   border-radius: 12px;
   box-shadow: var(--shadow-sm);
-  max-width: 80%;
   position: relative;
   animation: slideIn var(--anim-duration) ease-out;
+  color: var(--text-primary);
+  border: 1px solid rgba(232, 188, 185, 0.5); /* Accent with opacity */
+  box-sizing: border-box;
+  word-wrap: break-word;
+  word-break: break-word;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  font-size: 1.4rem;
 }
 
+/* Sent Messages */
 .message-item.sent {
   margin-left: auto;
   background: var(--message-sent-bg);
   border-bottom-right-radius: 4px;
 }
 
+/* Received Messages */
 .message-item.received {
   margin-right: auto;
   border-bottom-left-radius: 4px;
 }
 
+/* System Messages */
 .message-item.system {
+  width: 100%;
   max-width: 100%;
   background: var(--message-system-bg);
   text-align: center;
   font-size: 0.9em;
-  color: #666;
+  color: var(--text-secondary);
   box-shadow: none;
 }
 
+/* Message Status */
 .message-status {
   position: absolute;
   bottom: -1.2em;
   right: 0.5em;
-  font-size: 0.7em;
-  opacity: 0.7;
+  font-size: 0.8em;
+  opacity: 0.9;
+  color: #ffffff;
+  margin-left: 8px;
 }
 
+.message-status.sending {
+  color: #f39c12;
+}
+
+.message-status.sent {
+  color: #27ae60;
+}
+
+.message-status.failed {
+  color: #e74c3c;
+}
+
+/* Message Header */
+.message-header {
+  font-size: 0.9em;
+  color: #ffffff;
+  margin-bottom: 6px;
+}
+
+.message-header .author {
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.message-header .timestamp {
+  color: #dddddd;
+}
+
+/* Typing Indicator */
 .typing-indicator {
   padding: 0.5rem;
-  color: #666;
+  color: #ffffff;
   font-size: 0.9em;
   font-style: italic;
 }
@@ -109,10 +245,252 @@ body {
 .typing-indicator span:nth-child(2) {
   animation-delay: 0.2s;
 }
+
 .typing-indicator span:nth-child(3) {
   animation-delay: 0.4s;
 }
 
+/* New Messages Indicator */
+.new-messages-indicator {
+  position: absolute;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--primary-color);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  font-size: 0.9em;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+  border: 1px solid rgba(232, 188, 185, 0.5);
+  animation: bounceIn 0.5s ease-out;
+}
+
+/* =========================================
+   Message Input Area
+========================================= */
+.message-input-container {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  gap: 1rem;
+  padding: 1.5rem;
+  border-top: 1px solid var(--border-color);
+  background: var(--background-color);
+}
+
+.message-input {
+  flex: 1;
+  padding: 1.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 1.5rem;
+  background: rgba(67, 46, 84, 0.7); /* Background with opacity */
+  color: var(--text-primary);
+  z-index: 1;
+  position: relative;
+}
+
+.send-button {
+  padding: 1.5rem 3rem;
+  background: var(--primary-color);
+  color: white;
+  border: 1px solid rgba(232, 188, 185, 0.7); /* Accent with opacity */
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: opacity 0.2s ease;
+  font-size: 1.4rem;
+}
+
+.send-button:hover {
+  background: #e8bcb9; /* Accent color */
+}
+
+/* =========================================
+   Error Banner
+========================================= */
+.error-banner {
+  background: rgba(174, 68, 90, 0.9); /* Primary with opacity */
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  margin: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  animation: slideDown 0.3s ease-out;
+}
+
+/* =========================================
+   Login Components
+======================================== */
+.login-container {
+  max-width: 550px;
+  width: 90%;
+  padding: 4rem;
+  background: rgba(67, 46, 84, 0.7); /* Background with opacity */
+  border-radius: 12px;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-color);
+  backdrop-filter: blur(10px);
+}
+
+.login-container h2 {
+  margin: 0 0 0.5rem;
+  color: var(--text-primary);
+  font-size: 2.25rem;
+  text-align: center;
+}
+
+.login-subtitle {
+  text-align: center;
+  color: var(--text-secondary);
+  margin-bottom: 2rem;
+  font-size: 1.1rem;
+}
+
+.login-form {
+  margin-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  color: var(--text-primary);
+  font-weight: 500;
+  font-size: 1.1rem;
+}
+
+.form-input {
+  width: 100%;
+  padding: 1.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 1.4rem;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+
+  background: rgba(67, 46, 84, 0.7); /* Background with opacity */
+
+  color: var(--text-primary);
+}
+
+.form-input:focus {
+  border-color: #e8bcb9; /* Accent color */
+  box-shadow: 0 0 0 1px rgba(232, 188, 185, 0.7); /* Accent with opacity */
+}
+
+.form-input::placeholder {
+  color: #dddddd;
+}
+
+.submit-button {
+  margin-top: 0.5rem;
+  width: 100%;
+  padding: 1.25rem;
+  background: var(--primary-color);
+  color: white;
+  border: 1px solid rgba(232, 188, 185, 0.7); /* Accent with opacity */
+  border-radius: 8px;
+  font-size: 1.3rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.submit-button:hover:not(:disabled) {
+  background-color: #e8bcb9; /* Accent color */
+}
+
+.submit-button:disabled {
+  background-color: #cbd5e0;
+  cursor: not-allowed;
+}
+
+.loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 0.8s linear infinite;
+}
+
+/* Authentication Switch Links */
+.auth-switch {
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.link-button {
+  background: none;
+  border: none;
+  color: #e8bcb9; /* Accent color */
+  cursor: pointer;
+  font-weight: 500;
+  padding: 0;
+  text-decoration: underline;
+  transition: color 0.2s ease;
+}
+
+.link-button:hover {
+  color: #ae445a; /* Primary color */
+}
+
+/* =========================================
+   Signup Components
+======================================== */
+.signup-container,
+.confirm-signup-container {
+  max-width: 400px;
+  margin: 2rem auto;
+  padding: 2rem;
+
+  background: rgba(67, 46, 84, 0.7); /* Background with opacity */
+
+  border-radius: 8px;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-color);
+  backdrop-filter: blur(10px);
+}
+
+.confirm-signup-container p {
+  color: #ffffff;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.confirm-signup-container .form-group {
+  margin-bottom: 1.5rem;
+}
+
+.confirm-signup-container button {
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.confirm-signup-container .link-button {
+  width: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+/* =========================================
+   Animations
+======================================== */
 @keyframes blink {
   0% {
     opacity: 0.1;
@@ -123,21 +501,6 @@ body {
   100% {
     opacity: 0.1;
   }
-}
-
-.new-messages-indicator {
-  position: absolute;
-  bottom: 1rem;
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--secondary-color);
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 999px;
-  font-size: 0.9em;
-  cursor: pointer;
-  box-shadow: var(--shadow-md);
-  animation: bounceIn 0.5s ease-out;
 }
 
 @keyframes bounceIn {
@@ -157,65 +520,6 @@ body {
   }
 }
 
-.message-input-container {
-  display: flex;
-  gap: 0.5rem;
-  padding: 1rem;
-  border-top: 2px solid var(--background-color);
-}
-
-.message-input {
-  flex: 1;
-  padding: 0.75rem;
-  border: 2px solid var(--background-color);
-  border-radius: 4px;
-  font-size: 1rem;
-}
-
-.send-button {
-  padding: 0.75rem 1.5rem;
-  background: var(--secondary-color);
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 500;
-}
-
-.send-button:hover {
-  opacity: 0.9;
-}
-
-.message-status {
-  font-size: 0.8em;
-  color: #666;
-  margin-left: 8px;
-}
-
-.message-status.sending {
-  color: #f39c12;
-}
-
-.message-status.sent {
-  color: #27ae60;
-}
-
-.message-status.failed {
-  color: #e74c3c;
-}
-
-.error-banner {
-  background: #ff6b6b;
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  margin: 1rem 0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  animation: slideDown 0.3s ease-out;
-}
-
 @keyframes slideDown {
   from {
     opacity: 0;
@@ -227,149 +531,173 @@ body {
   }
 }
 
-.message-header {
-  font-size: 0.8em;
-  color: #666;
-  margin-bottom: 4px;
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-.message-header .author {
-  font-weight: 600;
-  color: #333;
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
-.message-header .timestamp {
-  color: #666;
+/* Responsive adjustments */
+@media (min-width: 768px) {
+  .login-container {
+    padding: 4.5rem;
+    max-width: 580px;
+  }
 }
 
-.logout-button {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  padding: 0.5rem 1rem;
-  background: var(--background-color);
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  color: var(--primary-color);
-  font-weight: 500;
+@media (max-width: 480px) {
+  .login-container {
+    width: 95%;
+    padding: 2.5rem;
+    margin: 1rem;
+  }
+
+  .login-container h2 {
+    font-size: 1.75rem;
+  }
 }
 
-.logout-button:hover {
-  background: #e2e8f0;
-}
-
-.login-container {
-  max-width: 400px;
-  margin: 2rem auto;
-  padding: 2rem;
-  background: white;
-  border-radius: 8px;
-  box-shadow: var(--shadow-md);
-}
-
-.form-group {
-  margin-bottom: 1rem;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-  color: var(--primary-color);
-}
-
-.form-group input {
-  width: 100%;
-  padding: 0.75rem;
-  border: 2px solid var(--background-color);
-  border-radius: 4px;
-  font-size: 1rem;
+.form-input.error {
+  border-color: #e8bcb9; /* Accent color */
+  background-color: rgba(232, 188, 185, 0.2); /* Accent with opacity */
 }
 
 .error-message {
   color: #e74c3c;
-  margin-bottom: 1rem;
-  padding: 0.5rem;
-  background: #fde8e8;
-  border-radius: 4px;
+  font-size: 0.9rem;
+  margin-top: 0.25rem;
 }
 
-.login-container button {
-  width: 100%;
-  padding: 0.75rem;
-  background: var(--secondary-color);
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 500;
-  font-size: 1rem;
-  transition: opacity var(--anim-duration) ease;
+.form-group.error label {
+  color: #e74c3c;
 }
 
-.login-container button:hover {
-  opacity: 0.9;
+/* Loading skeleton styles */
+.message-skeleton {
+  background: var(--message-bg);
+  border-radius: 12px;
+  height: 60px;
+  margin: 0.5rem 0;
+  max-width: 80%;
+  animation: pulse 1.5s infinite;
+  opacity: 0.5;
+  padding: 0.75rem 1rem;
+  box-sizing: border-box;
 }
 
-.login-container button:disabled {
-  background: #cbd5e0;
-  cursor: not-allowed;
+.message-skeleton:nth-child(odd) {
+  margin-right: auto;
+  width: 60%;
 }
 
-.auth-switch {
+.message-skeleton:nth-child(even) {
+  margin-left: auto;
+  width: 70%;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 0.3;
+  }
+}
+
+/* Fix container sizing */
+.message-list-container {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.message-list {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow-y: auto;
+  padding: 1rem;
+  scroll-behavior: smooth;
+  background: rgba(67, 46, 84, 0.5); /* Background with opacity */
+}
+
+.date-separator {
+  text-align: center;
+  margin: 1.5rem 0 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+.date-text {
+  background: rgb(67, 46, 84); /* Background color */
+  padding: 1rem 2rem;
+  border-radius: 1rem;
+  font-size: 1.2rem;
+  color: var(--text-secondary);
+  display: inline-block;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  position: relative;
+  z-index: 2;
+}
+
+.message-item + .message-item {
+  margin-top: 0.3rem;
+}
+
+.date-separator + .message-item {
   margin-top: 1rem;
-  text-align: center;
 }
 
-.link-button {
-  background: none;
-  border: none;
-  color: var(--secondary-color);
+.date-separator::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: var(--border-color);
+  z-index: 1;
+}
+
+/* Scroll to bottom button */
+.scroll-bottom-button {
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--background-color);
+  color: white;
+  border: 1px solid var(--border-color);
   cursor: pointer;
-  font-weight: 500;
-  padding: 0;
-  text-decoration: underline;
-}
-
-.link-button:hover {
-  color: #2980b9;
-}
-
-.signup-container {
-  max-width: 400px;
-  margin: 2rem auto;
-  padding: 2rem;
-  background: white;
-  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
   box-shadow: var(--shadow-md);
+  transition: all 0.2s ease;
+  opacity: 0;
+  animation: fadeIn 0.3s ease-out forwards;
+  z-index: 10;
 }
 
-.confirm-signup-container {
-  max-width: 400px;
-  margin: 2rem auto;
-  padding: 2rem;
-  background: white;
-  border-radius: 8px;
-  box-shadow: var(--shadow-md);
-}
-
-.confirm-signup-container p {
-  color: #666;
-  margin-bottom: 1.5rem;
-  text-align: center;
-}
-
-.confirm-signup-container .form-group {
-  margin-bottom: 1.5rem;
-}
-
-.confirm-signup-container button {
-  width: 100%;
-  margin-bottom: 1rem;
-}
-
-.confirm-signup-container .link-button {
-  width: auto;
-  display: block;
-  margin: 0 auto;
+.scroll-bottom-button:hover {
+  background: var(--secondary-color);
+  transform: translateY(-2px);
 }

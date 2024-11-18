@@ -6,13 +6,13 @@ use crate::graphql::mutations::{
 };
 use crate::graphql::queries::{ListMessagesData, LIST_MESSAGES_QUERY};
 use crate::graphql::subscriptions::{SubscriptionPayload, ON_CREATE_MESSAGE_SUBSCRIPTION};
-use crate::graphql::types::GraphQLResponse;
 use crate::models::message::{Message, MessageStatus};
-use crate::state::auth_state::AuthState;
+use crate::state::auth_state::{AuthAction, AuthState};
 use crate::state::chat_state::{ChatAction, ChatState};
 use crate::utils::graphql_client::GraphQLClient;
 use crate::utils::websocket::AppSyncWebSocket;
 use std::rc::Rc;
+use wasm_bindgen::JsCast;
 use yew::prelude::*;
 
 #[derive(Properties, PartialEq)]
@@ -30,55 +30,119 @@ pub fn chat(props: &ChatProps) -> Html {
     });
 
     let ws = use_state(|| None::<Rc<AppSyncWebSocket>>);
+    let show_scroll_bottom = use_state(|| false);
 
-    // Initialize chat and subscription
+    // Add scroll handler to MessageList
+    let on_scroll = {
+        let show_scroll_bottom = show_scroll_bottom.clone();
+
+        Callback::from(move |scroll_info: (f64, f64, f64)| {
+            let (scroll_top, scroll_height, client_height) = scroll_info;
+            // Show button when not at bottom (with small threshold)
+            show_scroll_bottom.set(scroll_top + client_height < scroll_height - 50.0);
+        })
+    };
+
+    // Add scroll to bottom handler
+    let scroll_to_bottom = {
+        Callback::from(move |e: MouseEvent| {
+            e.prevent_default();
+            if let Some(list) = web_sys::window()
+                .and_then(|w| w.document())
+                .and_then(|d| d.query_selector(".message-list").ok())
+                .flatten()
+            {
+                let list: web_sys::HtmlElement = list.dyn_into().unwrap();
+                list.scroll_to_with_x_and_y(0.0, list.scroll_height() as f64);
+            }
+        })
+    };
+
+    let handle_token_error = {
+        let auth_state = props.auth_state.clone();
+        let chat_state = chat_state.clone();
+
+        move |error: &str| {
+            // Check for token expiration related errors
+            if error.contains("expired") || error.contains("token") {
+                // Dispatch logout action which will redirect to login
+                auth_state.dispatch(AuthAction::Logout);
+            } else {
+                // Handle other errors normally
+                chat_state.dispatch(ChatAction::SetError(error.to_string()));
+            }
+        }
+    };
+
+    // Add WebSocket subscription
     {
         let chat_state = chat_state.clone();
-        let token = props.auth_state.token.clone();
         let ws = ws.clone();
+        let token = props.auth_state.token.clone();
 
-        use_effect_with((), move |_| {
+        use_effect_with(token, move |token| {
             if let Some(token) = token {
-                let token = token.clone();
-                let token_for_fetch = token.clone();
-                let token_for_sub = token.clone();
-
-                let chat_state_for_fetch = chat_state.clone();
-
-                // Fetch initial messages
-                wasm_bindgen_futures::spawn_local(async move {
-                    fetch_messages(&chat_state_for_fetch, &token_for_fetch).await;
-                });
-
-                // Setup subscription
-                let chat_state_for_sub = chat_state.clone();
-
+                let chat_state = chat_state.clone();
                 let websocket = AppSyncWebSocket::new(
                     "wss://4psoayuvcnfu7ekadjzgs6erli.appsync-realtime-api.us-east-1.amazonaws.com/graphql",
-                    &token_for_sub,
+                    &token,
                     ON_CREATE_MESSAGE_SUBSCRIPTION,
                     move |payload| {
-                        if let Ok(subscription_payload) = serde_json::from_value::<SubscriptionPayload>(payload.clone()) {
-                            let message_data = subscription_payload.data.on_create_message.into_message_data();
-                            let new_message = Message::from_message_data(message_data);
-                            chat_state_for_sub.dispatch(ChatAction::AddMessage(new_message));
-                        } else {
-                            web_sys::console::log_1(&format!("Failed to parse subscription payload: {:?}", payload).into());
+                        if let Ok(subscription_data) = serde_json::from_value::<SubscriptionPayload>(payload) {
+                            let message = Message::from_message_data(
+                                subscription_data.data.on_create_message.into_message_data()
+                            );
+                            chat_state.dispatch(ChatAction::AddMessage(message));
                         }
                     },
                 );
                 ws.set(Some(Rc::new(websocket)));
             }
-
-            // Cleanup subscription on unmount
-            let ws = ws.clone();
-            move || {
-                if let Some(websocket) = (*ws).clone() {
-                    websocket.close();
-                }
-            }
+            || ()
         });
     }
+
+    // Modify the fetch_messages call
+    {
+        let chat_state = chat_state.clone();
+        let token = props.auth_state.token.clone();
+        let handle_token_error = handle_token_error.clone();
+
+        use_effect_with((), move |_| {
+            if let Some(token) = token {
+                wasm_bindgen_futures::spawn_local(async move {
+                    if let Err(e) = fetch_messages(&chat_state, &token).await {
+                        handle_token_error(&e);
+                    }
+                });
+            }
+            || ()
+        });
+    }
+
+    // Modify the message send handler
+    let on_send = {
+        let chat_state = chat_state.clone();
+        let token = props.auth_state.token.clone();
+        let handle_token_error = handle_token_error.clone();
+
+        Callback::from(move |msg: Message| {
+            if let Some(token) = token.clone() {
+                let chat_state = chat_state.clone();
+                let handle_token_error = handle_token_error.clone();
+
+                chat_state.dispatch(ChatAction::AddMessage(msg.clone()));
+
+                wasm_bindgen_futures::spawn_local(async move {
+                    if let Err(e) = handle_message_send(&chat_state, msg, token).await {
+                        handle_token_error(&e);
+                    }
+                });
+            } else {
+                chat_state.dispatch(ChatAction::SetError("Not authenticated".to_string()));
+            }
+        })
+    };
 
     html! {
         <div class="chat-container">
@@ -102,118 +166,94 @@ pub fn chat(props: &ChatProps) -> Html {
             <MessageList
                 messages={chat_state.messages.clone()}
                 current_user_id={props.auth_state.user_id.clone().unwrap_or_default()}
+                is_loading={chat_state.is_loading}
+                on_scroll={on_scroll}
+                show_scroll_button={*show_scroll_bottom}
+                on_scroll_to_bottom={scroll_to_bottom}
             />
-            <MessageInput on_send={
-                let chat_state = chat_state.clone();
-                let token = props.auth_state.token.clone();
-                Callback::from(move |msg: Message| {
-                    if let Some(token) = token.clone() {
-                        handle_message_send(&chat_state, msg, token);
-                    } else {
-                        chat_state.dispatch(ChatAction::SetError("Not authenticated".to_string()));
-                    }
-                })
-            } user_id={props.auth_state.user_id.clone().unwrap_or("sergio".to_string())} />
+            <MessageInput
+                on_send={on_send}
+                user_id={props.auth_state.user_id.clone().unwrap_or_default()}
+            />
         </div>
     }
 }
 
-async fn fetch_messages(chat_state: &UseReducerHandle<ChatState>, token: &str) {
+async fn fetch_messages(
+    chat_state: &UseReducerHandle<ChatState>,
+    token: &str,
+) -> Result<(), String> {
     chat_state.dispatch(ChatAction::SetLoading(true));
 
-    match GraphQLClient::new().await {
+    let result = match GraphQLClient::new().await {
         Ok(client) => {
             let client = client.with_token(token.to_string());
-            let result: GraphQLResponse<ListMessagesData> = match client
-                .execute_query("ListMessages", LIST_MESSAGES_QUERY, serde_json::json!({}))
+            match client
+                .execute_query::<_, ListMessagesData>(
+                    "ListMessages",
+                    LIST_MESSAGES_QUERY,
+                    serde_json::json!({}),
+                )
                 .await
             {
                 Ok(result) => result,
-                Err(e) => {
-                    chat_state.dispatch(ChatAction::SetError(e.to_string()));
-                    chat_state.dispatch(ChatAction::SetLoading(false));
-                    return;
-                }
-            };
-
-            if let Some(data) = result.data {
-                let mut messages: Vec<Message> = data
-                    .list_messages
-                    .into_iter()
-                    .map(Message::from_message_data)
-                    .collect();
-                // TODO: See if we can query and sort by timestamp directly from the API
-                messages.sort_by(|a, b| a.timestamp.partial_cmp(&b.timestamp).unwrap());
-                chat_state.dispatch(ChatAction::SetMessages(messages));
-            } else if let Some(errors) = result.errors {
-                chat_state.dispatch(ChatAction::SetError(errors[0].message.clone()));
+                Err(e) => return Err(e.to_string()),
             }
         }
-        Err(e) => {
-            chat_state.dispatch(ChatAction::SetError(e.to_string()));
-        }
+        Err(e) => return Err(e.to_string()),
+    };
+
+    if let Some(data) = result.data {
+        let mut messages: Vec<Message> = data
+            .list_messages
+            .into_iter()
+            .map(Message::from_message_data)
+            .collect();
+        messages.sort_by(|a, b| a.timestamp.partial_cmp(&b.timestamp).unwrap());
+        chat_state.dispatch(ChatAction::SetMessages(messages));
+    } else if let Some(errors) = result.errors {
+        return Err(errors[0].message.clone());
     }
 
     chat_state.dispatch(ChatAction::SetLoading(false));
+    Ok(())
 }
 
-fn handle_message_send(chat_state: &UseReducerHandle<ChatState>, msg: Message, token: String) {
-    chat_state.dispatch(ChatAction::AddMessage(msg.clone()));
+async fn handle_message_send(
+    chat_state: &UseReducerHandle<ChatState>,
+    msg: Message,
+    token: String,
+) -> Result<(), String> {
+    let client = GraphQLClient::new()
+        .await
+        .map_err(|e| e.to_string())?
+        .with_token(token);
 
-    // Clone state before moving into async block
-    let chat_state = chat_state.clone();
+    let variables = CreateMessageVariables {
+        content: msg.content.clone(),
+        author: msg.author.clone(),
+    };
 
-    wasm_bindgen_futures::spawn_local(async move {
-        match GraphQLClient::new().await {
-            Ok(client) => {
-                // Add the token to the client
-                let client = client.with_token(token);
+    let response = client
+        .execute_query::<_, CreateMessageResponse>(
+            "CreateMessage",
+            CREATE_MESSAGE_MUTATION,
+            variables,
+        )
+        .await
+        .map_err(|e| e.to_string())?;
 
-                let variables = CreateMessageVariables {
-                    content: msg.content.clone(),
-                    author: msg.author.clone(),
-                };
-
-                match client
-                    .execute_query::<_, CreateMessageResponse>(
-                        "CreateMessage",
-                        CREATE_MESSAGE_MUTATION,
-                        variables,
-                    )
-                    .await
-                {
-                    Ok(response) => {
-                        if let Some(data) = response.data {
-                            // Update the message with the server-returned data
-                            let server_message = Message::from_message_data(data.create_message);
-                            chat_state.dispatch(ChatAction::UpdateMessage(
-                                msg.message_id,
-                                server_message,
-                            ));
-                        } else if let Some(errors) = response.errors {
-                            chat_state.dispatch(ChatAction::UpdateMessageStatus(
-                                msg.message_id,
-                                MessageStatus::Failed,
-                            ));
-                            chat_state.dispatch(ChatAction::SetError(errors[0].message.clone()));
-                        }
-                    }
-                    Err(e) => {
-                        chat_state.dispatch(ChatAction::UpdateMessageStatus(
-                            msg.message_id,
-                            MessageStatus::Failed,
-                        ));
-                        chat_state.dispatch(ChatAction::SetError(e.to_string()));
-                    }
-                }
-            }
-            Err(e) => {
-                chat_state.dispatch(ChatAction::UpdateMessageStatus(
-                    msg.message_id,
-                    MessageStatus::Failed,
-                ));
-                chat_state.dispatch(ChatAction::SetError(e.to_string()));
-            }
-        }
-    });
+    if let Some(data) = response.data {
+        let server_message = Message::from_message_data(data.create_message);
+        chat_state.dispatch(ChatAction::UpdateMessage(msg.message_id, server_message));
+        Ok(())
+    } else if let Some(errors) = response.errors {
+        chat_state.dispatch(ChatAction::UpdateMessageStatus(
+            msg.message_id,
+            MessageStatus::Failed,
+        ));
+        Err(errors[0].message.clone())
+    } else {
+        Err("Unknown error occurred".to_string())
+    }
 }
