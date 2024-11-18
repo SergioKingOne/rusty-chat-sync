@@ -43,6 +43,7 @@ pub fn message_list(props: &MessageListProps) -> Html {
         let list_ref = list_ref.clone();
         let auto_scroll = auto_scroll.clone();
         let on_scroll = props.on_scroll.clone();
+        let new_messages = new_messages.clone();
 
         Callback::from(move |_| {
             if let Some(list) = list_ref.cast::<HtmlElement>() {
@@ -50,8 +51,15 @@ pub fn message_list(props: &MessageListProps) -> Html {
                 let scroll_height = list.scroll_height() as f64;
                 let client_height = list.client_height() as f64;
 
-                // Enable auto-scroll when user scrolls to bottom
-                auto_scroll.set(scroll_top + client_height >= scroll_height - 10.0);
+                // Check if scrolled to bottom
+                let at_bottom = scroll_top + client_height >= scroll_height - 10.0;
+
+                // Reset new messages when scrolled to bottom
+                if at_bottom {
+                    new_messages.set(0);
+                }
+
+                auto_scroll.set(at_bottom);
                 on_scroll.emit((scroll_top, scroll_height, client_height));
             }
         })
@@ -165,9 +173,19 @@ pub fn message_list(props: &MessageListProps) -> Html {
             </div>
             {
                 if *new_messages > 0 && !*auto_scroll {
+                    let on_scroll_to_bottom = props.on_scroll_to_bottom.clone();
+                    let new_messages_for_click = new_messages.clone();
+                    let new_messages_for_display = new_messages.clone();
                     html! {
-                        <div class="new-messages-indicator">
-                            { format!("{} new messages ↓", *new_messages) }
+                        <div
+                            class="new-messages-indicator"
+                            onclick={move |e| {
+                                new_messages_for_click.set(0);
+                                on_scroll_to_bottom.emit(e);
+                            }}
+                            style="cursor: pointer;"
+                        >
+                            { format!("{} new messages ↓", *new_messages_for_display) }
                         </div>
                     }
                 } else {
