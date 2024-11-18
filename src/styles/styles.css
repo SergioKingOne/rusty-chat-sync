@@ -263,7 +263,7 @@ body {
   font-size: 0.9em;
   cursor: pointer;
   box-shadow: var(--shadow-md);
-  border: 1px solid rgba(232, 188, 185, 0.5); /* Accent with opacity */
+  border: 1px solid rgba(232, 188, 185, 0.5);
   animation: bounceIn 0.5s ease-out;
 }
 
