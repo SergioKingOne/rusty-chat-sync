@@ -95,7 +95,18 @@ module "appsync" {
       service_role_arn    = aws_iam_role.dynamodb_role.arn
       region              = var.aws_region
       table_name          = module.dynamodb.messages_table_name
-      create_service_role = false # Since we're using our custom role
+      create_service_role = false
+    }
+    "UsersTable" = {
+      type = "AMAZON_DYNAMODB"
+      dynamodb_config = {
+        table_name = module.dynamodb.users_table_name
+        region     = var.aws_region
+      }
+      service_role_arn    = aws_iam_role.dynamodb_role.arn
+      region              = var.aws_region
+      table_name          = module.dynamodb.users_table_name
+      create_service_role = false
     }
   }
 
@@ -109,6 +120,11 @@ module "appsync" {
       data_source       = "MessagesTable"
       request_template  = file("${path.module}/appsync/resolvers/Mutation.createMessage.req.vtl")
       response_template = file("${path.module}/appsync/resolvers/Mutation.createMessage.res.vtl")
+    }
+    "Message.author" = {
+      data_source       = "UsersTable"
+      request_template  = file("${path.module}/appsync/resolvers/Message.author.req.vtl")
+      response_template = file("${path.module}/appsync/resolvers/Message.author.res.vtl")
     }
   }
 }

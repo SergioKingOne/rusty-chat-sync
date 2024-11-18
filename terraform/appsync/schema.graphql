@@ -1,20 +1,35 @@
+type User {
+  userId: ID!
+  username: String!
+  email: String!
+  createdAt: Float!
+  lastSeen: Float
+  status: String
+}
+
 type Message {
   messageId: ID!
   content: String!
-  author: String!
+  author: User!
   timestamp: Float!
 }
 
 type Query {
   listMessages: [Message!]!
+  getUser(userId: ID!): User
+  getUserByEmail(email: String!): User
 }
 
 type Mutation {
-  createMessage(content: String!, author: String!): Message!
+  createMessage(content: String!, authorId: ID!): Message!
+  updateUserStatus(userId: ID!, status: String!): User
+  updateLastSeen(userId: ID!): User
 }
 
 type Subscription {
   onCreateMessage: Message! @aws_subscribe(mutations: ["createMessage"])
+  onUserStatusChange(userId: ID!): User
+    @aws_subscribe(mutations: ["updateUserStatus"])
 }
 
 schema {
