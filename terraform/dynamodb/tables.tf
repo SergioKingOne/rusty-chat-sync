@@ -23,10 +23,10 @@ resource "aws_dynamodb_table" "messages" {
 resource "aws_dynamodb_table" "users" {
   name         = "${var.dynamodb_table_name}-users"
   billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "userId"
+  hash_key     = "username"
 
   attribute {
-    name = "userId"
+    name = "username"
     type = "S"
   }
 
