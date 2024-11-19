@@ -299,18 +299,16 @@ async fn update_user_status(username: &str, status: &str, token: &str) -> Result
         status: status.to_string(),
     };
 
-    let response = client
-        .execute_query::<_, UpdateUserStatusResponse>(
+    // Execute query and only check for errors
+    client
+        .execute_query::<_, serde_json::Value>(
+            // Using serde_json::Value instead of specific response type
             "UpdateUserStatus",
             UPDATE_USER_STATUS_MUTATION,
             variables,
         )
         .await
         .map_err(|e| e.to_string())?;
-
-    if response.errors.is_some() {
-        return Err("Failed to update user status".to_string());
-    }
 
     Ok(())
 }
