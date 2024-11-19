@@ -126,6 +126,11 @@ module "appsync" {
       request_template  = file("${path.module}/appsync/resolvers/Mutation.createUser.req.vtl")
       response_template = file("${path.module}/appsync/resolvers/Mutation.createUser.res.vtl")
     }
+    "Mutation.updateUserStatus" = {
+      data_source       = "UsersTable"
+      request_template  = file("${path.module}/appsync/resolvers/Mutation.updateUserStatus.req.vtl")
+      response_template = file("${path.module}/appsync/resolvers/Mutation.updateUserStatus.res.vtl")
+    }
     "Message.author" = {
       data_source       = "UsersTable"
       request_template  = file("${path.module}/appsync/resolvers/Message.author.req.vtl")

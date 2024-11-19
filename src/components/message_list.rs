@@ -115,7 +115,11 @@ pub fn message_list(props: &MessageListProps) -> Html {
                                             let message_class = match msg.message_type {
                                                 MessageType::System => "system",
                                                 MessageType::Text => {
-                                                    if msg.author.user_id == props.current_user_id { "sent" } else { "received" }
+                                                    if msg.author.username == props.current_user_id {
+                                                        "sent"
+                                                    } else {
+                                                        "received"
+                                                    }
                                                 }
                                                 MessageType::Error => "error",
                                             };

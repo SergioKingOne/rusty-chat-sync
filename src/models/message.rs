@@ -46,11 +46,7 @@ impl Message {
         Self {
             message_id: uuid::Uuid::new_v4().to_string(),
             content,
-            author: User::new(
-                "system".to_string(),
-                "System".to_string(),
-                "system@system.local".to_string(),
-            ),
+            author: User::new("system".to_string(), "system@system.local".to_string()),
             timestamp: js_sys::Date::now(),
             status: MessageStatus::Sent,
             message_type: MessageType::System,

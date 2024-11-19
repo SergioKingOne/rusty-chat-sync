@@ -68,6 +68,7 @@ pub struct CreateMessageResponse {
 
 #[derive(Deserialize)]
 pub struct UpdateUserStatusResponse {
+    #[serde(rename = "updateUserStatus")]
     pub update_user_status: User,
 }
 

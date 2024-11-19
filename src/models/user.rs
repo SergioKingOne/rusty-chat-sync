@@ -2,7 +2,6 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct User {
-    pub user_id: String,
     pub username: String,
     pub email: String,
     pub created_at: f64,
@@ -11,9 +10,8 @@ pub struct User {
 }
 
 impl User {
-    pub fn new(user_id: String, username: String, email: String) -> Self {
+    pub fn new(username: String, email: String) -> Self {
         Self {
-            user_id,
             username,
             email,
             created_at: js_sys::Date::now(),

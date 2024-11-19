@@ -33,7 +33,7 @@ pub fn message_input(props: &MessageInputProps) -> Html {
                 let message = Message {
                     message_id: Uuid::new_v4().to_string(),
                     content: (*content).clone(),
-                    author: User::new(username.clone(), username.clone(), "".to_string()),
+                    author: User::new(username.clone(), "".to_string()),
                     status: MessageStatus::Sending,
                     message_type: MessageType::Text,
                     timestamp: js_sys::Date::now(),

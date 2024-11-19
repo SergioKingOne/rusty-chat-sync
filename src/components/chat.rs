@@ -261,7 +261,7 @@ async fn handle_message_send(
 
     let variables = CreateMessageVariables {
         content: msg.content.clone(),
-        author_id: msg.author.user_id.clone(),
+        author_id: msg.author.username.clone(),
     };
 
     let response = client
