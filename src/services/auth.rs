@@ -309,7 +309,6 @@ impl AuthService {
             .with_token(token.to_string());
 
         let variables = CreateUserVariables {
-            user_id: username.to_string(),
             username: username.to_string(),
             email: email.to_string(),
         };

@@ -32,9 +32,8 @@ pub const UPDATE_USER_STATUS_MUTATION: &str = r#"
 "#;
 
 pub const CREATE_USER_MUTATION: &str = r#"
-    mutation CreateUser($userId: ID!, $username: String!, $email: String!) {
-        createUser(userId: $userId, username: $username, email: $email) {
-            userId
+    mutation CreateUser($username: String!, $email: String!) {
+        createUser(username: $username, email: $email) {
             username
             email
             createdAt
@@ -58,7 +57,6 @@ pub struct UpdateUserStatusVariables {
 
 #[derive(Serialize)]
 pub struct CreateUserVariables {
-    pub user_id: String,
     pub username: String,
     pub email: String,
 }

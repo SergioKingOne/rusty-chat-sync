@@ -121,6 +121,11 @@ module "appsync" {
       request_template  = file("${path.module}/appsync/resolvers/Mutation.createMessage.req.vtl")
       response_template = file("${path.module}/appsync/resolvers/Mutation.createMessage.res.vtl")
     }
+    "Mutation.createUser" = {
+      data_source       = "UsersTable"
+      request_template  = file("${path.module}/appsync/resolvers/Mutation.createUser.req.vtl")
+      response_template = file("${path.module}/appsync/resolvers/Mutation.createUser.res.vtl")
+    }
     "Message.author" = {
       data_source       = "UsersTable"
       request_template  = file("${path.module}/appsync/resolvers/Message.author.req.vtl")
@@ -165,7 +170,9 @@ resource "aws_iam_role_policy" "dynamodb_policy" {
         ]
         Resource = [
           module.dynamodb.messages_table_arn,
-          "${module.dynamodb.messages_table_arn}/*"
+          "${module.dynamodb.messages_table_arn}/*",
+          module.dynamodb.users_table_arn,
+          "${module.dynamodb.users_table_arn}/*"
         ]
       }
     ]

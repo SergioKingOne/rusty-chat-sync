@@ -1,8 +1,8 @@
 {
-  "version": "2018-05-29",
+  "version": "2017-02-28",
   "operation": "PutItem",
   "key": {
-    "userId": $util.dynamodb.toDynamoDBJson($ctx.args.userId)
+    "userId": $util.dynamodb.toDynamoDBJson($util.autoId())
   },
   "attributeValues": {
     "username": $util.dynamodb.toDynamoDBJson($ctx.args.username),
