@@ -22,8 +22,8 @@ type Query {
 
 type Mutation {
   createMessage(content: String!, authorId: ID!): Message!
-  updateUserStatus(userId: ID!, status: String!): User
-  updateLastSeen(userId: ID!): User
+  updateUserStatus(username: String!, status: String!): User
+  updateLastSeen(username: String!): User
   createUser(username: String!, email: String!): User!
 }
 

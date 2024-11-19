@@ -21,9 +21,8 @@ pub const CREATE_MESSAGE_MUTATION: &str = r#"
 "#;
 
 pub const UPDATE_USER_STATUS_MUTATION: &str = r#"
-    mutation UpdateUserStatus($userId: ID!, $status: String!) {
-        updateUserStatus(userId: $userId, status: $status) {
-            userId
+    mutation UpdateUserStatus($username: String!, $status: String!) {
+        updateUserStatus(username: $username, status: $status) {
             username
             status
             lastSeen
@@ -51,7 +50,7 @@ pub struct CreateMessageVariables {
 
 #[derive(Serialize)]
 pub struct UpdateUserStatusVariables {
-    pub user_id: String,
+    pub username: String,
     pub status: String,
 }
 
