@@ -14,9 +14,8 @@ pub const LIST_MESSAGES_QUERY: &str = r#"
 "#;
 
 pub const GET_USER_QUERY: &str = r#"
-    query GetUser($userId: ID!) {
-        getUser(userId: $userId) {
-            userId
+    query GetUser($username: String!) {
+        getUser(username: $username) {
             username
             email
             createdAt
@@ -29,7 +28,6 @@ pub const GET_USER_QUERY: &str = r#"
 pub const GET_USER_BY_EMAIL_QUERY: &str = r#"
     query GetUserByEmail($email: String!) {
         getUserByEmail(email: $email) {
-            userId
             username
             email
             createdAt
