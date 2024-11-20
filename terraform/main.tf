@@ -131,6 +131,11 @@ module "appsync" {
       request_template  = file("${path.module}/appsync/resolvers/Mutation.updateUserStatus.req.vtl")
       response_template = file("${path.module}/appsync/resolvers/Mutation.updateUserStatus.res.vtl")
     }
+    "Mutation.updateLastSeen" = {
+      data_source       = "UsersTable"
+      request_template  = file("${path.module}/appsync/resolvers/Mutation.updateLastSeen.req.vtl")
+      response_template = file("${path.module}/appsync/resolvers/Mutation.updateLastSeen.res.vtl")
+    }
   }
 }
 
