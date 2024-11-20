@@ -1,4 +1,3 @@
-use crate::models::user::User;
 use serde::Deserialize;
 
 use super::types::MessageData;
@@ -8,14 +7,7 @@ pub const ON_CREATE_MESSAGE_SUBSCRIPTION: &str = r#"
         onCreateMessage {
             messageId
             content
-            author {
-                userId
-                username
-                email
-                createdAt
-                lastSeen
-                status
-            }
+            username
             timestamp
         }
     }
@@ -38,7 +30,7 @@ pub struct OnCreateMessageData {
     pub message_id: String,
     #[serde(rename = "content")]
     pub content: String,
-    pub author: User,
+    pub username: String,
     #[serde(rename = "timestamp")]
     pub timestamp: f64,
 }
@@ -48,7 +40,7 @@ impl OnCreateMessageData {
         MessageData {
             message_id: self.message_id,
             content: self.content,
-            author: self.author,
+            username: self.username,
             timestamp: self.timestamp,
         }
     }

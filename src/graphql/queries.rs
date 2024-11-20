@@ -7,14 +7,7 @@ pub const LIST_MESSAGES_QUERY: &str = r#"
         listMessages {
             messageId
             content
-            author {
-                userId
-                username
-                email
-                createdAt
-                lastSeen
-                status
-            }
+            username
             timestamp
         }
     }

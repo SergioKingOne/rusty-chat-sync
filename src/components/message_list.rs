@@ -115,7 +115,7 @@ pub fn message_list(props: &MessageListProps) -> Html {
                                             let message_class = match msg.message_type {
                                                 MessageType::System => "system",
                                                 MessageType::Text => {
-                                                    if msg.author.username == props.current_user_id {
+                                                    if msg.username == props.current_user_id {
                                                         "sent"
                                                     } else {
                                                         "received"
@@ -133,14 +133,12 @@ pub fn message_list(props: &MessageListProps) -> Html {
                                                         if msg.message_type != MessageType::System {
                                                             html! {
                                                                 <div class="message-header">
-                                                                    <span class="author">{ &msg.author.username }</span>
+                                                                    <span class="author">{ &msg.username }</span>
                                                                     {" • "}
                                                                     <span class="timestamp">
                                                                         { format_timestamp(msg.timestamp) }
                                                                     </span>
-                                                                    if let Some(status) = &msg.author.status {
-                                                                        <span class="user-status">{ status }</span>
-                                                                    }
+                                                                        <span class="user-status">{ msg.status.to_string() }</span>
                                                                 </div>
                                                             }
                                                         } else {

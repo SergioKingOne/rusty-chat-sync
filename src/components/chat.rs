@@ -2,8 +2,8 @@ use crate::components::chat_status::ChatStatus;
 use crate::components::message_input::MessageInput;
 use crate::components::message_list::MessageList;
 use crate::graphql::mutations::{
-    CreateMessageResponse, CreateMessageVariables, UpdateUserStatusResponse,
-    UpdateUserStatusVariables, CREATE_MESSAGE_MUTATION, UPDATE_USER_STATUS_MUTATION,
+    CreateMessageResponse, CreateMessageVariables, UpdateUserStatusVariables,
+    CREATE_MESSAGE_MUTATION, UPDATE_USER_STATUS_MUTATION,
 };
 use crate::graphql::queries::{ListMessagesData, LIST_MESSAGES_QUERY};
 use crate::graphql::subscriptions::{SubscriptionPayload, ON_CREATE_MESSAGE_SUBSCRIPTION};
@@ -261,7 +261,7 @@ async fn handle_message_send(
 
     let variables = CreateMessageVariables {
         content: msg.content.clone(),
-        author_id: msg.author.username.clone(),
+        username: msg.username.clone(),
     };
 
     let response = client

@@ -1,7 +1,4 @@
-use crate::models::{
-    message::{Message, MessageStatus, MessageType},
-    user::User,
-};
+use crate::models::message::{Message, MessageStatus, MessageType};
 use uuid::Uuid;
 use web_sys::KeyboardEvent;
 use yew::prelude::*;
@@ -33,7 +30,7 @@ pub fn message_input(props: &MessageInputProps) -> Html {
                 let message = Message {
                     message_id: Uuid::new_v4().to_string(),
                     content: (*content).clone(),
-                    author: User::new(username.clone(), "".to_string()),
+                    username: username.clone(),
                     status: MessageStatus::Sending,
                     message_type: MessageType::Text,
                     timestamp: js_sys::Date::now(),
