@@ -10,7 +10,7 @@ type User {
 type Message {
   messageId: ID!
   content: String!
-  author: User!
+  username: String!
   timestamp: Float!
 }
 
@@ -21,7 +21,7 @@ type Query {
 }
 
 type Mutation {
-  createMessage(content: String!, authorId: ID!): Message!
+  createMessage(content: String!, username: String!): Message!
   updateUserStatus(username: String!, status: String!): User
   updateLastSeen(username: String!): User
   createUser(username: String!, email: String!): User!

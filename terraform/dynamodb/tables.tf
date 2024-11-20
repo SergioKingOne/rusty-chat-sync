@@ -14,6 +14,18 @@ resource "aws_dynamodb_table" "messages" {
     type = "N"
   }
 
+  attribute {
+    name = "username"
+    type = "S"
+  }
+
+  global_secondary_index {
+    name            = "UserMessagesIndex"
+    hash_key        = "username"
+    range_key       = "timestamp"
+    projection_type = "ALL"
+  }
+
   tags = {
     Environment = "dev"
     Name        = var.dynamodb_table_name
