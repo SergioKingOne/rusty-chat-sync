@@ -28,10 +28,8 @@ pub struct SubscriptionData {
 pub struct OnCreateMessageData {
     #[serde(rename = "messageId")]
     pub message_id: String,
-    #[serde(rename = "content")]
     pub content: String,
     pub username: String,
-    #[serde(rename = "timestamp")]
     pub timestamp: f64,
 }
 

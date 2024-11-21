@@ -3,10 +3,10 @@
   "operation": "PutItem",
   "key": {
     "messageId": $util.dynamodb.toDynamoDBJson($util.autoId()),
-    "timestamp": $util.dynamodb.toDynamoDBJson($util.time.nowEpochMilliSeconds())
+    "timestamp": $util.dynamodb.toDynamoDBJson($util.time.nowEpochMilliSeconds()),
+    "username": $util.dynamodb.toDynamoDBJson($ctx.args.username)
   },
   "attributeValues": {
-    "content": $util.dynamodb.toDynamoDBJson($ctx.args.content),
-    "username": $util.dynamodb.toDynamoDBJson($ctx.args.username)
+    "content": $util.dynamodb.toDynamoDBJson($ctx.args.content)
   }
 }

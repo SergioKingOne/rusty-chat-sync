@@ -27,7 +27,7 @@ type Mutation {
 }
 
 type Subscription {
-  onCreateMessage: Message! @aws_subscribe(mutations: ["createMessage"])
+  onCreateMessage: Message @aws_subscribe(mutations: ["createMessage"])
   onUserStatusChange(username: String!): User
     @aws_subscribe(mutations: ["updateUserStatus"])
 }
