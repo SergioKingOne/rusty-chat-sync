@@ -3,22 +3,23 @@
 #set($users = [$sender, $receiver])
 $util.qr($users.sort())
 #set($chatId = "CHAT#${users[0]}#${users[1]}")
+#set($timestamp = $util.time.nowEpochMilliSeconds())
 
 {
     "version": "2018-05-29",
     "operation": "PutItem",
     "key": {
         "PK": $util.dynamodb.toDynamoDBJson($chatId),
-        "SK": $util.dynamodb.toDynamoDBJson("MSG#${util.time.nowEpochMilliSeconds()}")
+        "SK": $util.dynamodb.toDynamoDBJson("MSG#${timestamp}")
     },
     "attributeValues": {
         "messageId": $util.dynamodb.toDynamoDBJson($util.autoId()),
         "content": $util.dynamodb.toDynamoDBJson($ctx.args.content),
         "sender": $util.dynamodb.toDynamoDBJson($sender),
-        "timestamp": $util.dynamodb.toDynamoDBJson($util.time.nowEpochMilliSeconds()),
+        "timestamp": $util.dynamodb.toDynamoDBJson($timestamp),
         "status": $util.dynamodb.toDynamoDBJson("SENT"),
         "chatId": $util.dynamodb.toDynamoDBJson($chatId),
         "GSI1PK": $util.dynamodb.toDynamoDBJson("USER#${sender}"),
-        "GSI1SK": $util.dynamodb.toDynamoDBJson("MSG#${util.time.nowEpochMilliSeconds()}")
+        "GSI1SK": $util.dynamodb.toDynamoDBJson("MSG#${timestamp}")
     }
 }
