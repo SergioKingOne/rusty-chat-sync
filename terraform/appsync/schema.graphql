@@ -4,30 +4,48 @@ type User {
   createdAt: Float!
   lastSeen: Float
   status: String
+  conversations: [Conversation!]
 }
 
 type Message {
   messageId: ID!
   content: String!
-  username: String!
+  sender: String!
   timestamp: Float!
+  status: MessageStatus!
+  chatId: String! # Format: CHAT#user1#user2
+}
+
+type Conversation {
+  chatId: String! # Format: CHAT#user1#user2
+  otherUser: User!
+  lastMessage: Message
+  unreadCount: Int!
+}
+
+enum MessageStatus {
+  SENDING
+  SENT
+  FAILED
 }
 
 type Query {
-  listMessages: [Message!]!
   getUser(username: String!): User
   getUserByEmail(email: String!): User
+  getConversation(otherUsername: String!): [Message!]!
+  listConversations: [Conversation!]!
 }
 
 type Mutation {
-  createMessage(content: String!, username: String!): Message!
-  updateUserStatus(username: String!, status: String!): User
-  updateLastSeen(username: String!): User
+  createMessage(content: String!, receiverUsername: String!): Message!
+  updateUserStatus(status: String!): User
+  updateLastSeen(chatId: String!): Conversation
   createUser(username: String!, email: String!): User!
 }
 
 type Subscription {
-  onCreateMessage: Message @aws_subscribe(mutations: ["createMessage"])
+  onCreateMessage(chatId: String!): Message
+    @aws_subscribe(mutations: ["createMessage"])
   onUserStatusChange(username: String!): User
     @aws_subscribe(mutations: ["updateUserStatus"])
 }

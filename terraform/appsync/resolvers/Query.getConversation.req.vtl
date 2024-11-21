@@ -1,0 +1,19 @@
+#set($currentUser = $ctx.identity.username)
+#set($otherUser = $ctx.args.otherUsername)
+#set($users = [$currentUser, $otherUser])
+$util.qr($users.sort())
+#set($chatId = "CHAT#${users[0]}#${users[1]}")
+
+{
+    "version": "2017-02-28",
+    "operation": "Query",
+    "index": "GSI1",
+    "query": {
+        "expression": "PK = :chatId",
+        "expressionValues": {
+            ":chatId": $util.dynamodb.toDynamoDBJson($chatId)
+        }
+    },
+    "scanIndexForward": false,
+    "limit": 50
+} 
