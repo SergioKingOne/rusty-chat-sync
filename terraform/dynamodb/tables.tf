@@ -24,7 +24,6 @@ resource "aws_dynamodb_table" "chat" {
     type = "S"
   }
 
-  # GSI for accessing messages by conversation
   global_secondary_index {
     name            = "GSI1"
     hash_key        = "GSI1PK"
@@ -36,14 +35,24 @@ resource "aws_dynamodb_table" "chat" {
     Environment = "dev"
     Name        = var.dynamodb_table_name
   }
+
+  lifecycle {
+    prevent_destroy = true
+    ignore_changes = [
+      name,
+      hash_key,
+      range_key,
+      attribute
+    ]
+  }
 }
 
-output "chat_table_name" {
+output "table_name" {
   description = "Name of the DynamoDB chat table"
   value       = aws_dynamodb_table.chat.name
 }
 
-output "chat_table_arn" {
+output "table_arn" {
   description = "ARN of the DynamoDB chat table"
   value       = aws_dynamodb_table.chat.arn
 }
