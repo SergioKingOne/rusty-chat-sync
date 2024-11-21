@@ -23,21 +23,27 @@ pub enum MessageType {
 pub struct Message {
     pub message_id: String,
     pub content: String,
-    pub username: String,
+    pub sender: String,
     pub timestamp: f64,
     pub status: MessageStatus,
     pub message_type: MessageType,
+    pub chat_id: String,
 }
 
 impl Message {
-    pub fn new_text(content: String, username: String) -> Self {
+    pub fn new_text(content: String, sender: String, receiver: String) -> Self {
+        let mut users = vec![sender.clone(), receiver];
+        users.sort();
+        let chat_id = format!("CHAT#{}#{}", users[0], users[1]);
+
         Self {
             message_id: uuid::Uuid::new_v4().to_string(),
             content,
-            username,
+            sender,
             timestamp: js_sys::Date::now(),
             status: MessageStatus::Sending,
             message_type: MessageType::Text,
+            chat_id,
         }
     }
 
@@ -45,10 +51,11 @@ impl Message {
         Self {
             message_id: uuid::Uuid::new_v4().to_string(),
             content,
-            username: "system".to_string(),
+            sender: "system".to_string(),
             timestamp: js_sys::Date::now(),
             status: MessageStatus::Sent,
             message_type: MessageType::System,
+            chat_id: "SYSTEM".to_string(),
         }
     }
 
@@ -56,10 +63,11 @@ impl Message {
         Self {
             message_id: data.message_id,
             content: data.content,
-            username: data.username,
+            sender: data.sender,
             timestamp: data.timestamp,
             status: MessageStatus::Sent,
             message_type: MessageType::Text,
+            chat_id: data.chat_id,
         }
     }
 }

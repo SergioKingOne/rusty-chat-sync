@@ -5,8 +5,32 @@ pub struct MessageData {
     #[serde(rename = "messageId")]
     pub message_id: String,
     pub content: String,
-    pub username: String,
+    pub sender: String,
     pub timestamp: f64,
+    pub chat_id: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ConversationData {
+    #[serde(rename = "chatId")]
+    pub chat_id: String,
+    #[serde(rename = "otherUser")]
+    pub other_user: UserData,
+    #[serde(rename = "lastMessage")]
+    pub last_message: Option<MessageData>,
+    #[serde(rename = "unreadCount")]
+    pub unread_count: i32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UserData {
+    pub username: String,
+    pub email: String,
+    #[serde(rename = "createdAt")]
+    pub created_at: f64,
+    #[serde(rename = "lastSeen")]
+    pub last_seen: Option<f64>,
+    pub status: Option<String>,
 }
 
 #[derive(Debug, Serialize)]

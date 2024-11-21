@@ -26,6 +26,7 @@ pub fn app() -> Html {
     });
 
     let show_signup = use_state(|| false);
+    let selected_user = use_state(|| None::<String>);
 
     html! {
         if !auth_state.is_authenticated {
@@ -53,6 +54,7 @@ pub fn app() -> Html {
                     let auth_state = auth_state.clone();
                     Callback::from(move |_| auth_state.dispatch(AuthAction::Logout))
                 }
+                selected_user={(*selected_user).clone()}
             />
         }
     }
