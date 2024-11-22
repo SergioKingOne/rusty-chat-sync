@@ -12,12 +12,30 @@ pub struct ConversationListProps {
     pub on_search: Callback<String>,
     pub is_loading: bool,
     pub current_user_id: String,
+    pub users: Vec<User>,
 }
 
 #[function_component(ConversationList)]
 pub fn conversation_list(props: &ConversationListProps) -> Html {
     let search_query = use_state(|| String::new());
     let show_search = use_state(|| false);
+
+    let filtered_users = {
+        let query = (*search_query).clone().to_lowercase();
+        if query.is_empty() {
+            vec![]
+        } else {
+            props
+                .users
+                .iter()
+                .filter(|user| {
+                    user.username.to_lowercase().contains(&query)
+                        || user.email.to_lowercase().contains(&query)
+                })
+                .cloned()
+                .collect::<Vec<_>>()
+        }
+    };
 
     let on_search_input = {
         let search_query = search_query.clone();
@@ -76,77 +94,125 @@ pub fn conversation_list(props: &ConversationListProps) -> Html {
             }
 
             <div class="conversations">
-                if props.is_loading {
-                    <div class="conversation-loading">
-                        { for (0..3).map(|i| {
+                if *show_search {
+                    if props.is_loading {
+                        <div class="user-loading">
+                            { for (0..3).map(|i| {
+                                html! {
+                                    <div key={i} class="conversation-skeleton" />
+                                }
+                            })}
+                        </div>
+                    } else if filtered_users.is_empty() {
+                        <div class="no-users">
+                            {"No users found"}
+                        </div>
+                    } else {
+                        { for filtered_users.iter().map(|user| {
+                            let username = user.username.clone();
                             html! {
-                                <div key={i} class="conversation-skeleton" />
+                                <div
+                                    key={username.clone()}
+                                    class="conversation-item"
+                                    onclick={
+                                        let username = username.clone();
+                                        let on_select = props.on_select.clone();
+                                        move |_| on_select.emit(username.clone())
+                                    }
+                                >
+                                    <div class="conversation-avatar">
+                                        {&username[0..1].to_uppercase()}
+                                    </div>
+                                    <div class="conversation-info">
+                                        <div class="conversation-name">
+                                            {&username}
+                                            if let Some(status) = &user.status {
+                                                <span class={classes!("user-status", status.to_lowercase())}>
+                                                    {status}
+                                                </span>
+                                            }
+                                        </div>
+                                        <div class="conversation-preview">
+                                            {&user.email}
+                                        </div>
+                                    </div>
+                                </div>
                             }
                         })}
-                    </div>
-                } else if props.conversations.is_empty() {
-                    <div class="no-conversations">
-                        {"No conversations yet"}
-                    </div>
+                    }
                 } else {
-                    { for props.conversations.iter().map(|conv| {
-                        let is_selected = props.selected_chat_id
-                            .as_ref()
-                            .map_or(false, |id| id == &conv.chat_id);
-
-                        let username = conv.other_user.username.clone();
-
-                        html! {
-                            <div
-                                key={conv.chat_id.clone()}
-                                class={classes!(
-                                    "conversation-item",
-                                    is_selected.then_some("selected")
-                                )}
-                                onclick={
-                                    let username = username.clone();
-                                    let on_select = props.on_select.clone();
-                                    move |_| on_select.emit(username.clone())
+                    if props.is_loading {
+                        <div class="conversation-loading">
+                            { for (0..3).map(|i| {
+                                html! {
+                                    <div key={i} class="conversation-skeleton" />
                                 }
-                            >
-                                <div class="conversation-avatar">
-                                    {&username[0..1].to_uppercase()}
-                                </div>
-                                <div class="conversation-info">
-                                    <div class="conversation-name">
-                                        {&username}
-                                        if let Some(status) = &conv.other_user.status {
-                                            <span class={classes!("user-status", status.to_lowercase())}>
-                                                {status}
-                                            </span>
+                            })}
+                        </div>
+                    } else if props.conversations.is_empty() {
+                        <div class="no-conversations">
+                            {"No conversations yet"}
+                        </div>
+                    } else {
+                        { for props.conversations.iter().map(|conv| {
+                            let is_selected = props.selected_chat_id
+                                .as_ref()
+                                .map_or(false, |id| id == &conv.chat_id);
+
+                            let username = conv.other_user.username.clone();
+
+                            html! {
+                                <div
+                                    key={conv.chat_id.clone()}
+                                    class={classes!(
+                                        "conversation-item",
+                                        is_selected.then_some("selected")
+                                    )}
+                                    onclick={
+                                        let username = username.clone();
+                                        let on_select = props.on_select.clone();
+                                        move |_| on_select.emit(username.clone())
+                                    }
+                                >
+                                    <div class="conversation-avatar">
+                                        {&username[0..1].to_uppercase()}
+                                    </div>
+                                    <div class="conversation-info">
+                                        <div class="conversation-name">
+                                            {&username}
+                                            if let Some(status) = &conv.other_user.status {
+                                                <span class={classes!("user-status", status.to_lowercase())}>
+                                                    {status}
+                                                </span>
+                                            }
+                                        </div>
+                                        if let Some(last_message) = &conv.last_message {
+                                            <div class="conversation-preview">
+                                                <span class="preview-sender">
+                                                    {
+                                                        if last_message.sender == props.current_user_id {
+                                                            "You: "
+                                                        } else {
+                                                            ""
+                                                        }
+                                                    }
+                                                </span>
+                                                {&last_message.content}
+                                            </div>
+                                            <div class="conversation-time">
+                                                {format_last_seen(last_message.timestamp)}
+                                            </div>
+                                        }
+                                        if conv.unread_count > 0 {
+                                            <div class="unread-badge">
+                                                {conv.unread_count}
+                                            </div>
                                         }
                                     </div>
-                                    if let Some(last_message) = &conv.last_message {
-                                        <div class="conversation-preview">
-                                            <span class="preview-sender">
-                                                {
-                                                    if last_message.sender == props.current_user_id {
-                                                        "You: "
-                                                    } else {
-                                                        ""
-                                                    }
-                                                }
-                                            </span>
-                                            {&last_message.content}
-                                        </div>
-                                        <div class="conversation-time">
-                                            {format_last_seen(last_message.timestamp)}
-                                        </div>
-                                    }
-                                    if conv.unread_count > 0 {
-                                        <div class="unread-badge">
-                                            {conv.unread_count}
-                                        </div>
-                                    }
                                 </div>
-                            </div>
-                        }
-                    })}
+                            }
+                        })}
+                    }
                 }
             </div>
         </div>

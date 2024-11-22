@@ -68,6 +68,7 @@ locals {
   resolver_names = [
     "Query.getUser",
     "Query.getConversation",
+    "Query.listUsers",
     "Mutation.createMessage",
     "Mutation.createUser",
     "Mutation.updateUserStatus"

@@ -73,6 +73,17 @@ pub const LIST_CONVERSATIONS_QUERY: &str = r#"
     }
 "#;
 
+pub const LIST_USERS_QUERY: &str = r#"
+    query ListUsers {
+        listUsers {
+            username
+            email
+            status
+            lastSeen
+        }
+    }
+"#;
+
 #[derive(Debug, Deserialize)]
 pub struct ListMessagesData {
     #[serde(rename = "listMessages")]
@@ -97,4 +108,10 @@ pub struct GetConversationResponse {
 #[derive(Debug, Deserialize)]
 pub struct ListConversationsResponse {
     pub list_conversations: Vec<ConversationData>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ListUsersResponse {
+    #[serde(rename = "listUsers")]
+    pub list_users: Vec<User>,
 }

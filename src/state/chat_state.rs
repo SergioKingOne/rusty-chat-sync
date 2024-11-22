@@ -1,5 +1,6 @@
 use crate::models::conversation::Conversation;
 use crate::models::message::{Message, MessageStatus};
+use crate::models::user::User;
 use std::rc::Rc;
 use yew::prelude::*;
 
@@ -10,6 +11,7 @@ pub struct ChatState {
     pub is_loading: bool,
     pub error: Option<String>,
     pub current_chat_id: Option<String>,
+    pub users: Vec<User>,
 }
 
 pub enum ChatAction {
@@ -22,6 +24,7 @@ pub enum ChatAction {
     SetError(String),
     ClearError,
     SetCurrentChatId(Option<String>),
+    SetUsers(Vec<User>),
 }
 
 impl Reducible for ChatState {
@@ -75,6 +78,9 @@ impl Reducible for ChatState {
             }
             ChatAction::SetConversations(conversations) => {
                 next_state.conversations = conversations;
+            }
+            ChatAction::SetUsers(users) => {
+                next_state.users = users;
             }
         }
 

@@ -6,7 +6,9 @@ use crate::graphql::mutations::{
     CreateMessageResponse, CreateMessageVariables, UpdateUserStatusVariables,
     CREATE_MESSAGE_MUTATION, UPDATE_USER_STATUS_MUTATION,
 };
-use crate::graphql::queries::{GetConversationResponse, GET_CONVERSATION_QUERY};
+use crate::graphql::queries::{
+    GetConversationResponse, ListUsersResponse, GET_CONVERSATION_QUERY, LIST_USERS_QUERY,
+};
 use crate::graphql::subscriptions::{SubscriptionPayload, ON_CREATE_MESSAGE_SUBSCRIPTION};
 use crate::models::message::{Message, MessageStatus};
 use crate::state::auth_state::{AuthAction, AuthState};
@@ -23,6 +25,7 @@ pub struct ChatProps {
     pub on_logout: Callback<()>,
     #[prop_or_default]
     pub selected_user: Option<String>,
+    pub on_select_user: Callback<Option<String>>,
 }
 
 #[function_component(Chat)]
@@ -33,6 +36,7 @@ pub fn chat(props: &ChatProps) -> Html {
         is_loading: false,
         error: None,
         current_chat_id: None,
+        users: Vec::new(),
     });
 
     let ws = use_state(|| None::<Rc<AppSyncWebSocket>>);
@@ -83,9 +87,11 @@ pub fn chat(props: &ChatProps) -> Html {
                 let chat_state = chat_state.clone();
                 let auth_state = auth_state.clone();
 
+                let token_clone = token.clone();
                 wasm_bindgen_futures::spawn_local(async move {
                     if let Err(e) =
-                        fetch_conversation_messages(&chat_state, username.to_string(), &token).await
+                        fetch_conversation_messages(&chat_state, username.to_string(), &token_clone)
+                            .await
                     {
                         if e.contains("expired") || e.contains("token") {
                             auth_state.dispatch(AuthAction::Logout);
@@ -103,6 +109,7 @@ pub fn chat(props: &ChatProps) -> Html {
     let on_select_conversation = {
         let chat_state = chat_state.clone();
         let auth_state = props.auth_state.clone();
+        let on_select_user = props.on_select_user.clone();
 
         Callback::from(move |username: String| {
             let mut users = vec![
@@ -112,6 +119,7 @@ pub fn chat(props: &ChatProps) -> Html {
             users.sort();
             let chat_id = format!("CHAT#{}#{}", users[0], users[1]);
             chat_state.dispatch(ChatAction::SetCurrentChatId(Some(chat_id)));
+            on_select_user.emit(Some(username));
         })
     };
 
@@ -173,6 +181,32 @@ pub fn chat(props: &ChatProps) -> Html {
         }
     });
 
+    // Fetch users effect
+    {
+        let chat_state = chat_state.clone();
+        let auth_state = props.auth_state.clone();
+        let token = props.auth_state.token.clone();
+
+        use_effect_with(token, move |token| {
+            if let Some(token) = token {
+                let chat_state = chat_state.clone();
+                let auth_state = auth_state.clone();
+                let token_clone = token.clone();
+
+                wasm_bindgen_futures::spawn_local(async move {
+                    if let Err(e) = fetch_users(&chat_state, &token_clone).await {
+                        if e.contains("expired") || e.contains("token") {
+                            auth_state.dispatch(AuthAction::Logout);
+                        } else {
+                            chat_state.dispatch(ChatAction::SetError(e));
+                        }
+                    }
+                });
+            }
+            || ()
+        });
+    }
+
     html! {
         <div class="chat-container">
             <ConversationList
@@ -182,6 +216,7 @@ pub fn chat(props: &ChatProps) -> Html {
                 on_search={on_search_users}
                 is_loading={chat_state.is_loading}
                 current_user_id={props.auth_state.user_id.clone().unwrap_or_default()}
+                users={chat_state.users.clone()}
             />
             <div class="chat-main">
                 <div class="chat-header">
@@ -214,7 +249,8 @@ pub fn chat(props: &ChatProps) -> Html {
                 />
                 <MessageInput
                     on_send={on_send}
-                    disabled={props.selected_user.is_none()}
+                    // disabled={props.selected_user.is_none()}
+                    disabled={false}
                 />
             </div>
         </div>
@@ -331,4 +367,25 @@ async fn update_user_status(username: &str, status: &str, token: &str) -> Result
         .map_err(|e| e.to_string())?;
 
     Ok(())
+}
+
+async fn fetch_users(chat_state: &UseReducerHandle<ChatState>, token: &str) -> Result<(), String> {
+    let client = GraphQLClient::new()
+        .await
+        .map_err(|e| e.to_string())?
+        .with_token(token.to_string());
+
+    let response = client
+        .execute_query::<_, ListUsersResponse>("ListUsers", LIST_USERS_QUERY, serde_json::json!({}))
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if let Some(data) = response.data {
+        chat_state.dispatch(ChatAction::SetUsers(data.list_users));
+        Ok(())
+    } else if let Some(errors) = response.errors {
+        Err(errors[0].message.clone())
+    } else {
+        Ok(())
+    }
 }

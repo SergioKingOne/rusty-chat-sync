@@ -15,17 +15,17 @@ resource "aws_dynamodb_table" "chat" {
   }
 
   attribute {
-    name = "GSI1PK"
+    name = "GSI1PK" # Global secondary index 1 partition key
     type = "S"
   }
 
   attribute {
-    name = "GSI1SK"
+    name = "GSI1SK" # Global secondary index 1 sort key
     type = "S"
   }
 
   global_secondary_index {
-    name            = "GSI1"
+    name            = "GSI1" # Global secondary index 1
     hash_key        = "GSI1PK"
     range_key       = "GSI1SK"
     projection_type = "ALL"

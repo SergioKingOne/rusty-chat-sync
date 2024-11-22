@@ -69,15 +69,23 @@ body {
 
 /* Chat Container */
 .chat-container {
-  position: relative;
+  display: flex;
   width: 100%;
   height: 100vh;
-  margin: auto auto;
+  max-width: 1400px;
+  margin: 0 auto;
   background: var(--background-color);
+  overflow: hidden;
+}
+
+/* Chat Main */
+.chat-main {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  transition: all 0.3s ease;
-  overflow: hidden;
+  min-width: 0;
+  height: 100vh;
+  position: relative;
 }
 
 /* Chat Header */
@@ -278,6 +286,7 @@ body {
   padding: 1.5rem;
   border-top: 1px solid var(--border-color);
   background: var(--background-color);
+  margin-top: auto;
 }
 
 .message-input {
@@ -621,6 +630,7 @@ body {
   flex: 1;
   position: relative;
   overflow: hidden;
+  min-height: 0;
 }
 
 .message-list {

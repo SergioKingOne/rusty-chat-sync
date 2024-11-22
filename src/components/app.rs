@@ -55,6 +55,10 @@ pub fn app() -> Html {
                     Callback::from(move |_| auth_state.dispatch(AuthAction::Logout))
                 }
                 selected_user={(*selected_user).clone()}
+                on_select_user={
+                    let selected_user = selected_user.clone();
+                    Callback::from(move |user| selected_user.set(user))
+                }
             />
         }
     }

@@ -34,6 +34,7 @@ type Query {
   getUserByEmail(email: String!): User
   getConversation(otherUsername: String!): [Message!]!
   listConversations: [Conversation!]!
+  listUsers: [User!]!
 }
 
 type Mutation {
