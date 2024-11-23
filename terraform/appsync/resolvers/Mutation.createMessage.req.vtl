@@ -1,12 +1,25 @@
+#set($sender = $ctx.identity.username)
+#set($receiver = $ctx.args.receiverUsername)
+#set($users = [$sender, $receiver])
+#set($sortedUsers = $util.list.sortList($users, false, ""))
+#set($chatId = "CHAT#${sortedUsers[0]}#${sortedUsers[1]}")
+#set($timestamp = $util.time.nowEpochMilliSeconds())
+
 {
-  "version": "2018-05-29",
-  "operation": "PutItem",
-  "key": {
-    "messageId": $util.dynamodb.toDynamoDBJson($util.autoId()),
-    "timestamp": $util.dynamodb.toDynamoDBJson($util.time.nowEpochMilliSeconds()),
-    "username": $util.dynamodb.toDynamoDBJson($ctx.args.username)
-  },
-  "attributeValues": {
-    "content": $util.dynamodb.toDynamoDBJson($ctx.args.content)
-  }
+    "version": "2018-05-29",
+    "operation": "PutItem",
+    "key": {
+        "PK": $util.dynamodb.toDynamoDBJson($chatId),
+        "SK": $util.dynamodb.toDynamoDBJson("MSG#${timestamp}")
+    },
+    "attributeValues": {
+        "messageId": $util.dynamodb.toDynamoDBJson($util.autoId()),
+        "content": $util.dynamodb.toDynamoDBJson($ctx.args.content),
+        "sender": $util.dynamodb.toDynamoDBJson($sender),
+        "timestamp": $util.dynamodb.toDynamoDBJson($timestamp),
+        "status": $util.dynamodb.toDynamoDBJson("SENT"),
+        "chatId": $util.dynamodb.toDynamoDBJson($chatId),
+        "GSI1PK": $util.dynamodb.toDynamoDBJson("USER#${sender}"),
+        "GSI1SK": $util.dynamodb.toDynamoDBJson("MSG#${timestamp}")
+    }
 }

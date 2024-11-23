@@ -3,12 +3,14 @@ use crate::models::user::User;
 use serde::{Deserialize, Serialize};
 
 pub const CREATE_MESSAGE_MUTATION: &str = r#"
-    mutation CreateMessage($content: String!, $username: String!) {
-        createMessage(content: $content, username: $username) {
+    mutation CreateMessage($content: String!, $receiverUsername: String!) {
+        createMessage(content: $content, receiverUsername: $receiverUsername) {
             messageId
             content
-            username
+            sender
             timestamp
+            chatId
+            status
         }
     }
 "#;
@@ -38,7 +40,8 @@ pub const CREATE_USER_MUTATION: &str = r#"
 #[derive(Serialize)]
 pub struct CreateMessageVariables {
     pub content: String,
-    pub username: String,
+    #[serde(rename = "receiverUsername")]
+    pub receiver_username: String,
 }
 
 #[derive(Serialize)]
