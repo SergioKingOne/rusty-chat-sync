@@ -1,8 +1,8 @@
 #set($sender = $ctx.identity.username)
 #set($receiver = $ctx.args.receiverUsername)
 #set($users = [$sender, $receiver])
-$util.qr($users.sort())
-#set($chatId = "CHAT#${users[0]}#${users[1]}")
+#set($sortedUsers = $util.list.sortList($users, false, ""))
+#set($chatId = "CHAT#${sortedUsers[0]}#${sortedUsers[1]}")
 #set($timestamp = $util.time.nowEpochMilliSeconds())
 
 {
