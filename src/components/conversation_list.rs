@@ -22,19 +22,16 @@ pub fn conversation_list(props: &ConversationListProps) -> Html {
 
     let filtered_users = {
         let query = (*search_query).clone().to_lowercase();
-        if query.is_empty() {
-            vec![]
-        } else {
-            props
-                .users
-                .iter()
-                .filter(|user| {
-                    user.username.to_lowercase().contains(&query)
-                        || user.email.to_lowercase().contains(&query)
-                })
-                .cloned()
-                .collect::<Vec<_>>()
-        }
+        props
+            .users
+            .iter()
+            .filter(|user| {
+                query.is_empty()
+                    || user.username.to_lowercase().contains(&query)
+                    || user.email.to_lowercase().contains(&query)
+            })
+            .cloned()
+            .collect::<Vec<_>>()
     };
 
     let on_search_input = {
@@ -108,37 +105,39 @@ pub fn conversation_list(props: &ConversationListProps) -> Html {
                             {"No users found"}
                         </div>
                     } else {
-                        { for filtered_users.iter().map(|user| {
-                            let username = user.username.clone();
-                            html! {
-                                <div
-                                    key={username.clone()}
-                                    class="conversation-item"
-                                    onclick={
-                                        let username = username.clone();
-                                        let on_select = props.on_select.clone();
-                                        move |_| on_select.emit(username.clone())
-                                    }
-                                >
-                                    <div class="conversation-avatar">
-                                        {&username[0..1].to_uppercase()}
-                                    </div>
-                                    <div class="conversation-info">
-                                        <div class="conversation-name">
-                                            {&username}
-                                            if let Some(status) = &user.status {
-                                                <span class={classes!("user-status", status.to_lowercase())}>
-                                                    {status}
-                                                </span>
-                                            }
+                        <div class="users-list">
+                            { for filtered_users.iter().map(|user| {
+                                let username = user.username.clone();
+                                html! {
+                                    <div
+                                        key={username.clone()}
+                                        class="conversation-item"
+                                        onclick={
+                                            let username = username.clone();
+                                            let on_select = props.on_select.clone();
+                                            move |_| on_select.emit(username.clone())
+                                        }
+                                    >
+                                        <div class="conversation-avatar">
+                                            {&username[0..1].to_uppercase()}
                                         </div>
-                                        <div class="conversation-preview">
-                                            {&user.email}
+                                        <div class="conversation-info">
+                                            <div class="conversation-name">
+                                                {&username}
+                                                if let Some(status) = &user.status {
+                                                    <span class={classes!("user-status", status.to_lowercase())}>
+                                                        {status}
+                                                    </span>
+                                                }
+                                            </div>
+                                            <div class="conversation-preview">
+                                                {&user.email}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            }
-                        })}
+                                }
+                            })}
+                        </div>
                     }
                 } else {
                     if props.is_loading {
