@@ -40,6 +40,7 @@ pub const CREATE_USER_MUTATION: &str = r#"
 #[derive(Serialize)]
 pub struct CreateMessageVariables {
     pub content: String,
+    #[serde(rename = "receiverUsername")]
     pub receiver_username: String,
 }
 

@@ -7,6 +7,7 @@ pub struct MessageData {
     pub content: String,
     pub sender: String,
     pub timestamp: f64,
+    #[serde(rename = "chatId")]
     pub chat_id: String,
 }
 

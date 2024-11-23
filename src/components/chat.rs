@@ -147,8 +147,10 @@ pub fn chat(props: &ChatProps) -> Html {
                 let auth_state = auth_state.clone();
                 let content = msg.content.clone();
 
-                let msg = Message::new_text(content, sender, receiver.clone());
+                let msg = Message::new_text(content, sender.clone(), receiver.clone());
                 chat_state.dispatch(ChatAction::AddMessage(msg.clone()));
+
+                let receiver = receiver.clone();
 
                 wasm_bindgen_futures::spawn_local(async move {
                     if let Err(e) = handle_message_send(&chat_state, msg, receiver, &token).await {
@@ -159,6 +161,10 @@ pub fn chat(props: &ChatProps) -> Html {
                         }
                     }
                 });
+            } else {
+                chat_state.dispatch(ChatAction::SetError(
+                    "Please select a user to send message to".to_string(),
+                ));
             }
         })
     };
@@ -252,8 +258,7 @@ pub fn chat(props: &ChatProps) -> Html {
                 />
                 <MessageInput
                     on_send={on_send}
-                    // disabled={props.selected_user.is_none()}
-                    disabled={false}
+                    disabled={props.selected_user.is_none()}
                 />
             </div>
         </div>
