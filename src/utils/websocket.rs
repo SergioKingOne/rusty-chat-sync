@@ -26,6 +26,7 @@ impl AppSyncWebSocket {
         endpoint: &str,
         token: &str,
         subscription_query: &str,
+        variables: Option<serde_json::Value>,
         on_message: impl Fn(serde_json::Value) + 'static,
     ) -> Self {
         let api_endpoint = endpoint
@@ -69,7 +70,7 @@ impl AppSyncWebSocket {
 
         let subscription_query_json = serde_json::json!({
             "query": subscription_query,
-            "variables": {}
+            "variables": variables.unwrap_or(serde_json::json!({}))
         });
 
         let start_subscription = serde_json::json!({

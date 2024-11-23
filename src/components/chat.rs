@@ -54,9 +54,12 @@ pub fn chat(props: &ChatProps) -> Html {
             if let (Some(token), Some(chat_id)) = (token, chat_id) {
                 let chat_state = chat_state.clone();
                 let websocket = AppSyncWebSocket::new(
-                    "wss://your-appsync-endpoint/graphql",
+                    "wss://4psoayuvcnfu7ekadjzgs6erli.appsync-realtime-api.us-east-1.amazonaws.com/graphql",
                     &token,
                     &ON_CREATE_MESSAGE_SUBSCRIPTION,
+                    Some(serde_json::json!({
+                        "chatId": chat_id
+                    })),
                     move |payload| {
                         if let Ok(subscription_data) =
                             serde_json::from_value::<SubscriptionPayload>(payload)

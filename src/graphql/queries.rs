@@ -103,6 +103,7 @@ pub struct GetUserByEmailResponse {
 
 #[derive(Debug, Deserialize)]
 pub struct GetConversationResponse {
+    #[serde(rename = "getConversation")]
     pub get_conversation: Vec<MessageData>,
 }
 
