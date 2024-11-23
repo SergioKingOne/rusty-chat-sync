@@ -78,6 +78,7 @@ pub const LIST_USERS_QUERY: &str = r#"
         listUsers {
             username
             email
+            createdAt
             status
             lastSeen
         }
