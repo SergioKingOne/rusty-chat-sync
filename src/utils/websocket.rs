@@ -189,14 +189,16 @@ impl AppSyncWebSocket {
         let subscription_id = self.subscription_id.clone();
         let writer = self.writer.clone();
 
-        spawn_local(async move {
-            let stop_subscription = serde_json::json!({
-                "id": subscription_id,
-                "type": "stop"
-            });
+        let stop_subscription = serde_json::json!({
+            "id": subscription_id,
+            "type": "stop"
+        });
+        let stop_msg = Message::Text(serde_json::to_string(&stop_subscription).unwrap());
 
-            let stop_msg = Message::Text(serde_json::to_string(&stop_subscription).unwrap());
-            writer.borrow_mut().send(stop_msg).await.unwrap();
+        spawn_local(async move {
+            if let Ok(mut writer) = writer.try_borrow_mut() {
+                let _ = writer.send(stop_msg).await;
+            }
         });
     }
 }
