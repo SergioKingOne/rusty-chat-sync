@@ -34,7 +34,8 @@ pub fn conversation_list(props: &ConversationListProps) -> Html {
             .collect::<Vec<_>>()
     };
 
-    let on_search_input = {
+    // TODO: Search is not implemented yet.
+    let _on_search_input = {
         let search_query = search_query.clone();
         let on_search = props.on_search.clone();
 
@@ -77,18 +78,6 @@ pub fn conversation_list(props: &ConversationListProps) -> Html {
                     }
                 </button>
             </div>
-
-            if *show_search {
-                <div class="search-container">
-                    <input
-                        type="text"
-                        class="search-input"
-                        placeholder="Search users..."
-                        value={(*search_query).clone()}
-                        oninput={on_search_input}
-                    />
-                </div>
-            }
 
             <div class="conversations">
                 if *show_search {
