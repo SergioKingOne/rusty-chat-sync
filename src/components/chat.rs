@@ -352,7 +352,7 @@ async fn handle_message_send(
     }
 }
 
-async fn update_user_status(username: &str, status: &str, token: &str) -> Result<(), String> {
+async fn _update_user_status(username: &str, status: &str, token: &str) -> Result<(), String> {
     let client = GraphQLClient::new()
         .await
         .map_err(|e| e.to_string())?
