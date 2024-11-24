@@ -1,71 +1,58 @@
-use dotenv::dotenv;
-use lazy_static::lazy_static;
-use std::env;
+// TODO: Not working due to wasm. Not worth fixing for now.
 
-lazy_static! {
-    pub static ref CONFIG: Config = Config::new();
+use once_cell::sync::Lazy;
+use wasm_bindgen::prelude::*;
+
+// JavaScript interop to get environment variables from window
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(js_namespace = window)]
+    fn get_env(key: &str) -> Option<String>;
 }
 
-#[derive(Clone, Debug)]
+#[derive(Debug, Clone)]
 pub struct Config {
-    pub aws_access_key_id: String,
-    pub aws_secret_access_key: String,
-    pub aws_region: String,
-    pub aws_id: String,
-    pub log_level: String,
     pub graphql_endpoint: String,
+    pub websocket_endpoint: String,
+    pub cognito_client_id: String,
+    pub cognito_endpoint: String,
 }
+
+// Global config instance that will panic if any required env vars are missing
+pub static CONFIG: Lazy<Config> = Lazy::new(|| Config::new().expect("Failed to initialize config"));
 
 impl Config {
-    pub fn new() -> Self {
-        dotenv().ok();
-
-        Self {
-            aws_access_key_id: get_required_var("AWS_ACCESS_KEY_ID"),
-            aws_secret_access_key: get_required_var("AWS_SECRET_ACCESS_KEY"),
-            aws_region: get_var_with_default("AWS_REGION", "us-east-1"),
-            aws_id: get_required_var("AWS_ID"),
-            log_level: get_var_with_default("RUST_LOG", "info"),
-            graphql_endpoint: get_required_var("GRAPHQL_ENDPOINT"),
-        }
+    pub fn new() -> Result<Self, String> {
+        Ok(Self {
+            graphql_endpoint: get_required_env("GRAPHQL_ENDPOINT")?,
+            websocket_endpoint: get_required_env("WEBSOCKET_ENDPOINT")?,
+            cognito_client_id: get_required_env("COGNITO_CLIENT_ID")?,
+            cognito_endpoint: get_required_env("COGNITO_ENDPOINT")?,
+        })
     }
 
-    pub fn init_logging(&self) {
-        env_logger::init();
+    pub fn debug_string(&self) -> String {
+        format!(
+            "Config:\n\
+             GraphQL Endpoint: {}\n\
+             WebSocket Endpoint: {}\n\
+             Cognito Client ID: {}\n\
+             Cognito Endpoint: {}\n",
+            self.graphql_endpoint,
+            self.websocket_endpoint,
+            self.cognito_client_id,
+            self.cognito_endpoint
+        )
     }
 }
 
-fn get_required_var(key: &str) -> String {
-    env::var(key).unwrap_or_else(|_| panic!("{} must be set", key))
+fn get_required_env(key: &str) -> Result<String, String> {
+    get_env(key)
+        .filter(|s| !s.is_empty())
+        .ok_or_else(|| format!("Missing required environment variable: {}", key))
 }
 
-fn get_var_with_default(key: &str, default: &str) -> String {
-    env::var(key).unwrap_or_else(|_| String::from(default))
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::env;
-
-    #[test]
-    fn test_config_loads_defaults() {
-        // Clear any existing env vars
-        env::remove_var("AWS_REGION");
-        env::remove_var("RUST_LOG");
-
-        let config = Config::new();
-        assert_eq!(config.aws_region, "us-east-1");
-        assert_eq!(config.log_level, "info");
-    }
-
-    #[test]
-    fn test_config_loads_custom_values() {
-        env::set_var("AWS_REGION", "eu-west-1");
-        env::set_var("RUST_LOG", "debug");
-
-        let config = Config::new();
-        assert_eq!(config.aws_region, "eu-west-1");
-        assert_eq!(config.log_level, "debug");
-    }
+#[cfg(debug_assertions)]
+pub fn print_config() {
+    web_sys::console::log_1(&format!("{}", CONFIG.debug_string()).into());
 }
