@@ -65,7 +65,7 @@ pub fn message_list(props: &MessageListProps) -> Html {
         })
     };
 
-    // Formatting functions can remain inside the component
+    // Formatting functions
     fn format_date(timestamp: f64) -> String {
         let now = Local::now();
         let message_date = Local.timestamp_millis_opt(timestamp as i64).unwrap();
@@ -79,6 +79,22 @@ pub fn message_list(props: &MessageListProps) -> Html {
         }
     }
 
+    fn format_time(timestamp: f64) -> String {
+        let datetime = Local.timestamp_millis_opt(timestamp as i64).unwrap();
+        datetime.format("%I:%M %p").to_string()
+    }
+
+    fn should_show_sender(messages: &[Message], index: usize) -> bool {
+        if index == 0 {
+            return true;
+        }
+        let current = &messages[index];
+        let previous = &messages[index - 1];
+
+        current.sender != previous.sender || (current.timestamp - previous.timestamp) > 300000.0
+        // 5 minutes gap
+    }
+
     html! {
         <div class="message-list-container">
             <div
@@ -88,82 +104,77 @@ pub fn message_list(props: &MessageListProps) -> Html {
             >
                 {
                     if props.is_loading {
-                        (0..5).map(|i| {
-                            html! {
-                                <div class="message-skeleton" key={i} />
-                            }
-                        }).collect::<Html>()
+                        html! {
+                            <div class="message-loading">
+                                { for (0..3).map(|i| {
+                                    html! {
+                                        <div key={i} class="message-skeleton" />
+                                    }
+                                })}
+                            </div>
+                        }
                     } else {
                         html! {
-                            <div>
+                            <div class="message-groups">
                                 {
-                                    {
-                                        let mut current_date = String::new();
-                                        props.messages.iter().map(|msg| {
-                                            let mut elements = Vec::new();
-                                            let msg_date = format_date(msg.timestamp);
+                                   {
+                                    let mut current_date = String::new();
+                                    props.messages.iter().enumerate().map(|(index, msg)| {
+                                        let mut elements = Vec::new();
+                                        let msg_date = format_date(msg.timestamp);
 
-                                            if msg_date != current_date {
-                                                current_date = msg_date.clone();
-                                                elements.push(html! {
-                                                    <div class="date-separator">
-                                                        <span class="date-text">{ msg_date }</span>
-                                                    </div>
-                                                });
-                                            }
+                                        if msg_date != current_date {
+                                            current_date = msg_date.clone();
+                                            elements.push(html! {
+                                                <div class="date-separator">
+                                                    <span class="date-text">{ msg_date }</span>
+                                                </div>
+                                            });
+                                        }
 
-                                            let message_class = match msg.message_type {
+                                        let show_sender = should_show_sender(&props.messages, index);
+                                        let message_class = classes!(
+                                            "message-item",
+                                            match msg.message_type {
                                                 MessageType::System => "system",
                                                 MessageType::Text => {
-                                                    if msg.author == props.current_user_id { "sent" } else { "received" }
-                                                }
-                                                MessageType::Error => "error",
-                                            };
-
-                                            elements.push(html! {
-                                                <div
-                                                    class={classes!("message-item", message_class)}
-                                                    key={msg.message_id.clone()}
-                                                >
-                                                    {
-                                                        if msg.message_type != MessageType::System {
-                                                            html! {
-                                                                <div class="message-header">
-                                                                    <span class="author">{ &msg.author }</span>
-                                                                    {" • "}
-                                                                    <span class="timestamp">
-                                                                        { format_timestamp(msg.timestamp) }
-                                                                    </span>
-                                                                </div>
-                                                            }
-                                                        } else {
-                                                            html! {}
-                                                        }
+                                                    if msg.sender == props.current_user_id {
+                                                        "sent"
+                                                    } else {
+                                                        "received"
                                                     }
+                                                },
+                                                MessageType::Error => "error",
+                                            }
+                                        );
+
+                                        elements.push(html! {
+                                            <div class="message-wrapper" key={msg.message_id.clone()}>
+                                                if show_sender && msg.message_type != MessageType::System {
+                                                    <div class="message-sender">
+                                                        { &msg.sender }
+                                                    </div>
+                                                }
+                                                <div class={message_class}>
                                                     <div class="message-content">
                                                         { &msg.content }
                                                     </div>
-                                                    {
+                                                    <div class="message-meta">
+                                                        <span class="message-time">
+                                                            { format_time(msg.timestamp) }
+                                                        </span>
                                                         if msg.message_type == MessageType::Text {
-                                                            html! {
-                                                                <div
-                                                                    class={classes!(
-                                                                        "message-status",
-                                                                        msg.status.to_string().to_lowercase()
-                                                                    )}
-                                                                >
-                                                                    { get_status_icon(&msg.status) }
-                                                                </div>
-                                                            }
-                                                        } else {
-                                                            html! {}
+                                                            <span class={classes!("message-status", msg.status.to_string().to_lowercase())}>
+                                                                { get_status_icon(&msg.status) }
+                                                            </span>
                                                         }
-                                                    }
+                                                    </div>
                                                 </div>
-                                            });
+                                            </div>
+                                        });
 
-                                            elements
-                                        }).collect::<Vec<_>>().into_iter().flatten().collect::<Html>()
+                                        elements
+                                    }).collect::<Vec<_>>().into_iter().flatten().collect::<Html>()
                                     }
                                 }
                             </div>
@@ -171,31 +182,26 @@ pub fn message_list(props: &MessageListProps) -> Html {
                     }
                 }
             </div>
-            {
-                if *new_messages > 0 && !*auto_scroll {
-                    let on_scroll_to_bottom = props.on_scroll_to_bottom.clone();
-                    let new_messages_for_click = new_messages.clone();
-                    let new_messages_for_display = new_messages.clone();
-                    html! {
-                        <div
-                            class="new-messages-indicator"
-                            onclick={move |e| {
-                                new_messages_for_click.set(0);
-                                on_scroll_to_bottom.emit(e);
-                            }}
-                            style="cursor: pointer;"
-                        >
-                            { format!("{} new messages ↓", *new_messages_for_display) }
-                        </div>
+            if *new_messages > 0 && !*auto_scroll {
+                <div
+                    class="new-messages-indicator"
+                    onclick={
+                        let on_scroll_to_bottom = props.on_scroll_to_bottom.clone();
+                        let new_messages = new_messages.clone();
+                        Callback::from(move |e| {
+                            new_messages.set(0);
+                            on_scroll_to_bottom.emit(e);
+                        })
                     }
-                } else {
-                    html! {}
-                }
+                >
+                    { format!("{} new message{}", *new_messages, if *new_messages == 1 { "" } else { "s" }) }
+                </div>
             }
             if props.show_scroll_button {
                 <button
                     class="scroll-bottom-button"
-                    onclick={let cb = props.on_scroll_to_bottom.clone(); move |e: MouseEvent| cb.emit(e)}
+                    onclick={props.on_scroll_to_bottom.clone()}
+                    title="Scroll to bottom"
                 >
                     {"↓"}
                 </button>
@@ -210,12 +216,4 @@ fn get_status_icon(status: &MessageStatus) -> &'static str {
         MessageStatus::Sent => "✓",
         MessageStatus::Failed => "!",
     }
-}
-
-fn format_timestamp(timestamp: f64) -> String {
-    // Convert JavaScript timestamp (milliseconds) to DateTime
-    let datetime = Local.timestamp_millis_opt(timestamp as i64).unwrap();
-
-    // Format time as "12:34 PM"
-    datetime.format("%I:%M %p").to_string()
 }

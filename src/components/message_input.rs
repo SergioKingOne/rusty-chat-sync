@@ -6,7 +6,8 @@ use yew::prelude::*;
 #[derive(Properties, PartialEq)]
 pub struct MessageInputProps {
     pub on_send: Callback<Message>,
-    pub user_id: String,
+    #[prop_or_default]
+    pub disabled: bool,
 }
 
 #[function_component(MessageInput)]
@@ -24,16 +25,16 @@ pub fn message_input(props: &MessageInputProps) -> Html {
     let send_message = {
         let content = content.clone();
         let on_send = props.on_send.clone();
-        let username = props.user_id.clone();
         move || {
             if !content.is_empty() {
                 let message = Message {
                     message_id: Uuid::new_v4().to_string(),
                     content: (*content).clone(),
-                    author: username.clone(),
+                    sender: String::new(),
                     status: MessageStatus::Sending,
                     message_type: MessageType::Text,
                     timestamp: js_sys::Date::now(),
+                    chat_id: String::new(),
                 };
                 on_send.emit(message);
                 content.set(String::new());
@@ -64,13 +65,19 @@ pub fn message_input(props: &MessageInputProps) -> Html {
                 value={(*content).clone()}
                 {oninput}
                 {onkeypress}
-                placeholder="Type a message and press Enter to send..."
-                autofocus=true
+                placeholder={
+                    if props.disabled {
+                        "Select a conversation to start chatting..."
+                    } else {
+                        "Type a message and press Enter to send..."
+                    }
+                }
+                disabled={props.disabled}
             />
             <button
                 class="send-button"
                 {onclick}
-                disabled={content.is_empty()}
+                disabled={content.is_empty() || props.disabled}
             >
                 { "Send" }
             </button>

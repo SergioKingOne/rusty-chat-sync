@@ -63,12 +63,37 @@ resource "aws_cognito_user_pool_client" "client" {
   }
 }
 
-module "dynamodb" {
-  source              = "./dynamodb"
-  dynamodb_table_name = var.dynamodb_table_name
+# First, create a local for resolver names to help with dependencies
+locals {
+  resolver_names = [
+    "Query.getUser",
+    "Query.getConversation",
+    "Query.listUsers",
+    "Mutation.createMessage",
+    "Mutation.createUser",
+    "Mutation.updateUserStatus"
+  ]
 }
 
-# AppSync configuration
+# Create explicit resolver resources
+resource "aws_appsync_resolver" "resolvers" {
+  for_each = { for name in local.resolver_names : name => {
+    type  = split(".", name)[0]
+    field = split(".", name)[1]
+  } }
+
+  api_id      = module.appsync.appsync_graphql_api_id
+  type        = each.value.type
+  field       = each.value.field
+  data_source = "ChatTable"
+
+  request_template  = file("${path.module}/appsync/resolvers/${each.key}.req.vtl")
+  response_template = file("${path.module}/appsync/resolvers/${each.key}.res.vtl")
+
+  depends_on = [module.appsync]
+}
+
+# Update the AppSync module to not manage resolvers
 module "appsync" {
   source  = "terraform-aws-modules/appsync/aws"
   version = "2.5.1"
@@ -85,32 +110,31 @@ module "appsync" {
 
   schema = file("${path.module}/appsync/schema.graphql")
 
+  # Single data source
   datasources = {
-    "MessagesTable" = {
+    "ChatTable" = {
       type = "AMAZON_DYNAMODB"
       dynamodb_config = {
-        table_name = module.dynamodb.messages_table_name
+        table_name = module.dynamodb.table_name
         region     = var.aws_region
       }
       service_role_arn    = aws_iam_role.dynamodb_role.arn
       region              = var.aws_region
-      table_name          = module.dynamodb.messages_table_name
-      create_service_role = false # Since we're using our custom role
+      table_name          = module.dynamodb.table_name
+      create_service_role = false
     }
   }
 
-  resolvers = {
-    "Query.listMessages" = {
-      data_source       = "MessagesTable"
-      request_template  = file("${path.module}/appsync/resolvers/Query.listMessages.req.vtl")
-      response_template = file("${path.module}/appsync/resolvers/Query.listMessages.res.vtl")
-    }
-    "Mutation.createMessage" = {
-      data_source       = "MessagesTable"
-      request_template  = file("${path.module}/appsync/resolvers/Mutation.createMessage.req.vtl")
-      response_template = file("${path.module}/appsync/resolvers/Mutation.createMessage.res.vtl")
-    }
-  }
+  # Empty resolvers map - we're managing them separately
+  resolvers = {}
+
+  depends_on = [module.dynamodb]
+}
+
+# Update DynamoDB module configuration
+module "dynamodb" {
+  source              = "./dynamodb"
+  dynamodb_table_name = var.dynamodb_table_name
 }
 
 resource "aws_iam_role" "dynamodb_role" {
@@ -148,8 +172,8 @@ resource "aws_iam_role_policy" "dynamodb_policy" {
           "dynamodb:Scan"
         ]
         Resource = [
-          module.dynamodb.messages_table_arn,
-          "${module.dynamodb.messages_table_arn}/*"
+          module.dynamodb.table_arn,
+          "${module.dynamodb.table_arn}/*"
         ]
       }
     ]

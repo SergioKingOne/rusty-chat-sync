@@ -1,0 +1,17 @@
+{
+  "version": "2017-02-28",
+  "operation": "PutItem",
+  "key": {
+    "PK": $util.dynamodb.toDynamoDBJson("USER#${ctx.args.username}"),
+    "SK": $util.dynamodb.toDynamoDBJson("METADATA")
+  },
+  "attributeValues": {
+    "username": $util.dynamodb.toDynamoDBJson($ctx.args.username),
+    "email": $util.dynamodb.toDynamoDBJson($ctx.args.email),
+    "createdAt": $util.dynamodb.toDynamoDBJson($util.time.nowEpochMilliSeconds()),
+    "lastSeen": $util.dynamodb.toDynamoDBJson($util.time.nowEpochMilliSeconds()),
+    "status": $util.dynamodb.toDynamoDBJson("offline"),
+    "GSI1PK": $util.dynamodb.toDynamoDBJson("USER#${ctx.args.username}"),
+    "GSI1SK": $util.dynamodb.toDynamoDBJson("METADATA")
+  }
+}

@@ -1,11 +1,14 @@
 use crate::services::auth::AuthService;
+use crate::state::auth_state::{AuthAction, AuthState};
 use web_sys::HtmlInputElement;
 use yew::prelude::*;
 
 #[derive(Properties, PartialEq)]
 pub struct ConfirmSignUpProps {
     pub username: String,
-    pub on_confirmed: Callback<()>,
+    pub email: String,
+    pub password: String,
+    pub auth_state: UseReducerHandle<AuthState>,
     pub on_back: Callback<()>,
     #[prop_or_default]
     pub is_resend: bool,
@@ -20,26 +23,38 @@ pub fn confirm_signup(props: &ConfirmSignUpProps) -> Html {
     let onsubmit = {
         let confirmation_code = confirmation_code.clone();
         let username = props.username.clone();
+        let password = props.password.clone();
+        let email = props.email.clone();
         let is_loading = is_loading.clone();
         let error = error.clone();
-        let on_confirmed = props.on_confirmed.clone();
+        let auth_state = props.auth_state.clone();
 
         Callback::from(move |e: SubmitEvent| {
             e.prevent_default();
             let code = (*confirmation_code).clone();
             let username = username.clone();
+            let password = password.clone();
+            let email = email.clone();
             let is_loading = is_loading.clone();
             let error = error.clone();
-            let on_confirmed = on_confirmed.clone();
+            let auth_state = auth_state.clone();
 
             wasm_bindgen_futures::spawn_local(async move {
                 is_loading.set(true);
                 error.set(None);
 
                 let auth_service = AuthService::new();
-                match auth_service.confirm_sign_up(username, code).await {
+                match auth_service
+                    .confirm_sign_up(username.clone(), code, password, email)
+                    .await
+                {
                     Ok(()) => {
-                        on_confirmed.emit(());
+                        if let Some(stored_auth) = AuthService::get_stored_auth() {
+                            auth_state.dispatch(AuthAction::SetAuthenticated(
+                                stored_auth.id_token,
+                                username,
+                            ));
+                        }
                     }
                     Err(e) => {
                         error.set(Some(e));

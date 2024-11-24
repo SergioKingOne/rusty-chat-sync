@@ -11,6 +11,7 @@ dist
 /terraform/terraform.tfstate
 /terraform/terraform.tfstate.backup
 .terraform.lock.hcl
+.terraform.tfstate.lock.info
 
 # Logs
 *.log
