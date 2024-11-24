@@ -26,9 +26,10 @@ pub fn conversation_list(props: &ConversationListProps) -> Html {
             .users
             .iter()
             .filter(|user| {
-                query.is_empty()
-                    || user.username.to_lowercase().contains(&query)
-                    || user.email.to_lowercase().contains(&query)
+                user.username != props.current_user_id
+                    && (query.is_empty()
+                        || user.username.to_lowercase().contains(&query)
+                        || user.email.to_lowercase().contains(&query))
             })
             .cloned()
             .collect::<Vec<_>>()

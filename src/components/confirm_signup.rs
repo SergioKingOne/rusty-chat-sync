@@ -86,6 +86,7 @@ pub fn confirm_signup(props: &ConfirmSignUpProps) -> Html {
                     <input
                         type="text"
                         id="confirmation-code"
+                        class="form-input"
                         value={(*confirmation_code).clone()}
                         onchange={let code = confirmation_code.clone(); move |e: Event| {
                             let input: HtmlInputElement = e.target_unchecked_into();
@@ -97,6 +98,7 @@ pub fn confirm_signup(props: &ConfirmSignUpProps) -> Html {
 
                 <button
                     type="submit"
+                    class="submit-button"
                     disabled={*is_loading}
                 >
                     if *is_loading {
