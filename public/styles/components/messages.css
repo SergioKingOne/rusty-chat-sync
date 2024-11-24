@@ -1,0 +1,205 @@
+/* =========================================
+   Messages Components
+========================================= */
+
+/* Message Items */
+.message-item {
+  width: fit-content;
+  min-width: 100px;
+  max-width: 60%;
+  margin: 0.5rem 0;
+  padding: 0.75rem 1.5rem;
+  background: var(--message-bg);
+  border-radius: 20px;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  animation: slideIn var(--anim-duration) ease-out;
+  color: var(--text-primary);
+  border: 1px solid rgba(232, 188, 185, 0.5); /* Accent with opacity */
+  box-sizing: border-box;
+  word-wrap: break-word;
+  word-break: break-word;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  font-size: 1rem;
+  transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+}
+
+.message-item:hover {
+  transform: scale(1.02);
+}
+
+/* Sent Messages */
+.message-item.sent {
+  margin-left: auto;
+  background: var(--message-sent-bg);
+  border-bottom-right-radius: 4px;
+}
+
+/* Received Messages */
+.message-item.received {
+  margin-right: auto;
+  border-bottom-left-radius: 4px;
+}
+
+/* System Messages */
+.message-item.system {
+  width: 100%;
+  max-width: 100%;
+  background: var(--message-system-bg);
+  text-align: center;
+  font-size: 0.9em;
+  color: var(--text-secondary);
+  box-shadow: none;
+  border: none;
+}
+
+/* Message Status */
+.message-status {
+  position: absolute;
+  bottom: -1.2em;
+  right: 0.5em;
+  font-size: 0.8em;
+  opacity: 0.9;
+  color: #ffffff;
+  margin-left: 8px;
+}
+
+.message-status.sending {
+  color: #f39c12;
+}
+
+.message-status.sent {
+  color: #27ae60;
+}
+
+.message-status.failed {
+  color: #e74c3c;
+}
+
+/* Message Header */
+.message-header {
+  font-size: 0.8em;
+  color: #ffffff;
+  margin-bottom: 4px;
+}
+
+.message-header .author {
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.message-header .timestamp {
+  color: #dddddd;
+  margin-left: 0.5em;
+}
+
+/* Typing Indicator */
+.typing-indicator {
+  padding: 0.5rem;
+  color: #ffffff;
+  font-size: 0.8em;
+  font-style: italic;
+}
+
+.typing-indicator span {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin: 0 1px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  animation: blink 1.4s infinite both;
+}
+
+.typing-indicator span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-indicator span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+/* New Messages Indicator */
+.new-messages-indicator {
+  position: absolute;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--primary-color);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  font-size: 0.9em;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+  border: 1px solid rgba(232, 188, 185, 0.5);
+  animation: bounceIn 0.5s ease-out;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.new-messages-indicator:hover {
+  background: var(--secondary-color);
+  transform: translateX(-50%) scale(1.05);
+}
+
+/* Date Separator */
+.date-separator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 2rem 0;
+  position: relative;
+}
+
+.date-separator::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--border-color);
+  opacity: 0.3;
+}
+
+.date-text {
+  background: var(--background-color);
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  position: relative;
+  z-index: 1;
+}
+
+/* Improve Message Grouping */
+.message-item + .message-item {
+  margin-top: 0.2rem;
+}
+
+.message-wrapper:has(.message-item.sent)
+  + .message-wrapper:has(.message-item.sent)
+  .message-sender,
+.message-wrapper:has(.message-item.received)
+  + .message-wrapper:has(.message-item.received)
+  .message-sender {
+  display: none;
+}
+
+/* Message Skeleton */
+.message-skeleton {
+  height: 3rem;
+  background: var(--message-bg);
+  border-radius: 12px;
+  margin: 0.5rem 0;
+  opacity: 0.3;
+  animation: pulse 1.5s infinite;
+}
+
+.message-skeleton:nth-child(odd) {
+  margin-right: 20%;
+}
+
+.message-skeleton:nth-child(even) {
+  margin-left: 20%;
+}

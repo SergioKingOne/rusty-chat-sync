@@ -1,0 +1,63 @@
+/* =========================================
+   Responsive Adjustments
+========================================= */
+@media (max-width: 768px) {
+  .conversation-list {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    transform: translateX(-100%);
+    z-index: 20;
+    background: var(--background-color);
+    width: 250px;
+  }
+
+  .conversation-list.show {
+    transform: translateX(0);
+  }
+
+  .chat-main {
+    flex: 1;
+    position: relative;
+    height: calc(100vh - 60px);
+  }
+
+  .chat-container {
+    flex-direction: column;
+  }
+
+  .conversation-list {
+    width: 100%;
+    height: auto;
+    transform: translateX(-100%);
+  }
+}
+
+@media (min-width: 768px) {
+  .login-container {
+    padding: 4.5rem;
+    max-width: 580px;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-container {
+    width: 95%;
+    padding: 2.5rem;
+    margin: 1rem;
+  }
+
+  .login-container h2 {
+    font-size: 1.75rem;
+  }
+
+  .chat-header h1 {
+    font-size: 1.25rem;
+  }
+
+  .logout-button {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
+}

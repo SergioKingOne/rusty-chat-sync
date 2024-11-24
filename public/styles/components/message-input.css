@@ -1,0 +1,55 @@
+/* =========================================
+   Message Input Area
+========================================= */
+.message-input-container {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  border-top: 1px solid var(--border-color);
+  background: var(--background-color);
+}
+
+.message-input {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  font-size: 1rem;
+  background: rgba(67, 46, 84, 0.7); /* Background with opacity */
+  color: var(--text-primary);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-sizing: border-box;
+}
+
+.message-input:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 1px rgba(174, 68, 90, 0.7); /* Primary with opacity */
+  outline: none;
+}
+
+.message-input::placeholder {
+  color: #dddddd;
+}
+
+.send-button {
+  padding: 0.75rem 1.5rem;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s ease, transform 0.2s ease;
+  font-size: 1rem;
+}
+
+.send-button:hover {
+  background: var(--accent-color);
+  transform: translateY(-2px);
+}
+
+.send-button:disabled {
+  background-color: #cbd5e0;
+  cursor: not-allowed;
+  opacity: 0.7;
+}

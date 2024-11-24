@@ -1,0 +1,35 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap");
+
+/* =========================================
+   :root Variables
+========================================= */
+:root {
+  /* Font Family */
+  --font-primary: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Oxygen, Ubuntu, Cantarell, sans-serif;
+
+  /* Palette */
+  --primary-color: #ae445a; /* Primary */
+  --secondary-color: #4b4376; /* Secondary */
+  --background-color: #432e54; /* Background */
+  --accent-color: #e8bcb9; /* Accent */
+
+  /* Message Backgrounds */
+  --message-bg: rgba(75, 67, 118, 0.7); /* Secondary with opacity */
+  --message-sent-bg: rgba(174, 68, 90, 0.7); /* Primary with opacity */
+  --message-system-bg: rgba(67, 46, 84, 0.7); /* Background with opacity */
+
+  /* Text Colors */
+  --text-primary: #ffffff;
+  --text-secondary: rgba(232, 188, 185, 0.9); /* Accent with opacity */
+
+  /* Shadows */
+  --shadow-sm: 0 2px 4px rgba(67, 46, 84, 0.5);
+  --shadow-md: 0 4px 6px rgba(67, 46, 84, 0.6);
+
+  /* Border Color */
+  --border-color: rgba(232, 188, 185, 0.7); /* Accent with opacity */
+
+  /* Animation Duration */
+  --anim-duration: 0.3s;
+}
