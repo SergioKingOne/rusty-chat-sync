@@ -54,7 +54,6 @@ pub fn chat(props: &ChatProps) -> Html {
             if let (Some(token), Some(chat_id)) = (token, chat_id) {
                 let chat_state = chat_state.clone();
                 let websocket = AppSyncWebSocket::new(
-                    "wss://4psoayuvcnfu7ekadjzgs6erli.appsync-realtime-api.us-east-1.amazonaws.com/graphql",
                     &token,
                     &ON_CREATE_MESSAGE_SUBSCRIPTION,
                     Some(serde_json::json!({

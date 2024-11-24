@@ -1,3 +1,4 @@
+use crate::utils::config::CONFIG;
 use base64::Engine;
 use futures::stream::SplitSink;
 use futures::{SinkExt, StreamExt};
@@ -23,12 +24,13 @@ pub struct AppSyncWebSocket {
 
 impl AppSyncWebSocket {
     pub fn new(
-        endpoint: &str,
         token: &str,
         subscription_query: &str,
         variables: Option<serde_json::Value>,
         on_message: impl Fn(serde_json::Value) + 'static,
     ) -> Self {
+        let endpoint = &CONFIG.websocket_endpoint;
+
         let api_endpoint = endpoint
             .replace("wss://", "")
             .replace("-realtime-api", "-api")
