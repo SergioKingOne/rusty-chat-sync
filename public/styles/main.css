@@ -1,0 +1,20 @@
+/* Import Variables */
+@import "variables.css";
+
+/* Import Global Styles */
+@import "globals.css";
+
+/* Import Components */
+@import "components/chat.css";
+@import "components/conversation-list.css";
+@import "components/chat-main.css";
+@import "components/messages.css";
+@import "components/message-input.css";
+@import "components/error-banner.css";
+@import "components/forms.css";
+
+/* Import Animations */
+@import "animations.css";
+
+/* Import Responsive Styles */
+@import "responsive.css";
