@@ -4,10 +4,9 @@ use gloo::storage::{LocalStorage, Storage};
 use serde::{Deserialize, Serialize};
 
 use crate::graphql::mutations::{CreateUserResponse, CreateUserVariables, CREATE_USER_MUTATION};
+use crate::utils::config::CONFIG;
 use crate::utils::graphql_client::GraphQLClient;
 
-const CLIENT_ID: &str = "p7c55gqav2r7633fgqfbh0rcs";
-const AUTH_ENDPOINT: &str = "https://cognito-idp.us-east-1.amazonaws.com";
 const STORAGE_KEY: &str = "auth_tokens";
 const CONTENT_TYPE: &str = "application/x-amz-json-1.1";
 const AUTH_FLOW: &str = "USER_PASSWORD_AUTH";
@@ -104,7 +103,7 @@ impl AuthService {
         let username_clone = username.clone();
         let auth_request = AuthRequest {
             auth_flow: AUTH_FLOW.to_string(),
-            client_id: CLIENT_ID.to_string(),
+            client_id: CONFIG.cognito_client_id.clone(),
             auth_parameters: AuthParameters { username, password },
         };
 
@@ -114,7 +113,7 @@ impl AuthService {
 
         log!("Login request body:", &request_body);
 
-        let response = Request::post(AUTH_ENDPOINT)
+        let response = Request::post(&CONFIG.cognito_endpoint)
             .header("X-Amz-Target", TARGET_INITIATE_AUTH)
             .header("Content-Type", CONTENT_TYPE)
             .header("Accept", "*/*")
@@ -158,7 +157,7 @@ impl AuthService {
         email: String,
     ) -> Result<String, String> {
         let sign_up_request = SignUpRequest {
-            client_id: CLIENT_ID.to_string(),
+            client_id: CONFIG.cognito_client_id.to_string(),
             username: username.clone(),
             password,
             user_attributes: vec![UserAttribute {
@@ -171,7 +170,7 @@ impl AuthService {
         let request_body = serde_json::to_string(&sign_up_request)
             .map_err(|e| format!("Failed to serialize request: {}", e))?;
 
-        let response = Request::post(AUTH_ENDPOINT)
+        let response = Request::post(&CONFIG.cognito_endpoint)
             .header("X-Amz-Target", TARGET_SIGN_UP)
             .header("Content-Type", CONTENT_TYPE)
             .header("Accept", "*/*")
@@ -199,7 +198,7 @@ impl AuthService {
 
     async fn resend_confirmation_code(&self, username: String) -> Result<String, String> {
         let resend_request = ResendConfirmationCodeRequest {
-            client_id: CLIENT_ID.to_string(),
+            client_id: CONFIG.cognito_client_id.to_string(),
             username: username.clone(),
         };
 
@@ -208,7 +207,7 @@ impl AuthService {
 
         log!("Resend code request body:", &request_body);
 
-        let response = Request::post(AUTH_ENDPOINT)
+        let response = Request::post(&CONFIG.cognito_endpoint)
             .header("X-Amz-Target", TARGET_RESEND_CODE)
             .header("Content-Type", CONTENT_TYPE)
             .header("Accept", "*/*")
@@ -255,7 +254,7 @@ impl AuthService {
         email: String,
     ) -> Result<(), String> {
         let confirm_request = ConfirmSignUpRequest {
-            client_id: CLIENT_ID.to_string(),
+            client_id: CONFIG.cognito_client_id.to_string(),
             username: username.clone(),
             confirmation_code,
         };
@@ -265,7 +264,7 @@ impl AuthService {
 
         log!("Confirm signup request body:", &request_body);
 
-        let response = Request::post(AUTH_ENDPOINT)
+        let response = Request::post(&CONFIG.cognito_endpoint)
             .header("X-Amz-Target", TARGET_CONFIRM_SIGN_UP)
             .header("Content-Type", CONTENT_TYPE)
             .header("Accept", "*/*")
