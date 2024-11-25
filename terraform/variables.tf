@@ -21,3 +21,9 @@ variable "cognito_user_pool_name" {
   type        = string
   default     = "ChatUserPool"
 }
+
+variable "project_name" {
+  description = "Name of the project, used for resource naming"
+  type        = string
+  default     = "rusty-chat"
+}
