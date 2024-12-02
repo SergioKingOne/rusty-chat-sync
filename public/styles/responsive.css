@@ -1,7 +1,32 @@
 /* =========================================
    Responsive Adjustments
 ========================================= */
+
+/* Mobile Toggle Button */
+.mobile-toggle {
+  display: none;
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 30;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--primary-color);
+  color: var(--text-primary);
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
 @media (max-width: 768px) {
+  .mobile-toggle {
+    display: flex;
+  }
+
   .conversation-list {
     position: fixed;
     top: 0;
@@ -10,27 +35,79 @@
     transform: translateX(-100%);
     z-index: 20;
     background: var(--background-color);
-    width: 250px;
+    width: 280px;
+    transition: transform 0.3s ease;
   }
 
   .conversation-list.show {
     transform: translateX(0);
   }
 
-  .chat-main {
-    flex: 1;
-    position: relative;
-    height: calc(100vh - 60px);
+  .conversation-list-header {
+    padding-left: 4rem !important;
   }
 
   .chat-container {
     flex-direction: column;
   }
 
-  .conversation-list {
-    width: 100%;
-    height: auto;
-    transform: translateX(-100%);
+  .chat-header {
+    padding-left: 4rem !important;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    background: var(--primary-color);
+  }
+
+  .chat-header h1 {
+    font-size: 1.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .chat-header h2 {
+    display: none;
+  }
+
+  /* Message list adjustments */
+  .chat-main {
+    padding-top: 60px; /* Height of header */
+  }
+
+  .message-list-container {
+    height: calc(100vh - 120px); /* Viewport height minus header and input */
+  }
+
+  .message-list {
+    padding-bottom: 5rem;
+  }
+
+  /* Message input adjustments */
+  .message-input-container {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--background-color);
+    padding: 0.75rem;
+    z-index: 10;
+  }
+
+  .message-input {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+}
+
+/* Additional adjustments for when virtual keyboard is active */
+@media (max-width: 768px) and (max-height: 400px) {
+  .message-list-container {
+    height: calc(100vh - 60px - 60px);
   }
 }
 
@@ -52,12 +129,17 @@
     font-size: 1.75rem;
   }
 
+  .chat-header {
+    padding: 1rem 1rem 1rem 4rem !important;
+  }
+
   .chat-header h1 {
     font-size: 1.25rem;
   }
 
   .logout-button {
-    padding: 0.5rem 1rem;
+    padding: 0.5rem;
     font-size: 0.9rem;
+    white-space: nowrap;
   }
 }

@@ -41,6 +41,7 @@ pub fn chat(props: &ChatProps) -> Html {
 
     let ws = use_state(|| None::<Rc<AppSyncWebSocket>>);
     let show_scroll_bottom = use_state(|| false);
+    let show_mobile = use_state(|| false);
 
     // WebSocket effect
     {
@@ -112,6 +113,7 @@ pub fn chat(props: &ChatProps) -> Html {
         let chat_state = chat_state.clone();
         let auth_state = props.auth_state.clone();
         let on_select_user = props.on_select_user.clone();
+        let show_mobile = show_mobile.clone();
 
         Callback::from(move |username: String| {
             let mut users = vec![
@@ -122,6 +124,7 @@ pub fn chat(props: &ChatProps) -> Html {
             let chat_id = format!("CHAT#{}#{}", users[0], users[1]);
             chat_state.dispatch(ChatAction::SetCurrentChatId(Some(chat_id)));
             on_select_user.emit(Some(username));
+            show_mobile.set(false);
         })
     };
 
@@ -225,6 +228,11 @@ pub fn chat(props: &ChatProps) -> Html {
                 is_loading={chat_state.is_loading}
                 current_user_id={props.auth_state.user_id.clone().unwrap_or_default()}
                 users={chat_state.users.clone()}
+                show_mobile={*show_mobile}
+                on_mobile_toggle={
+                    let show = show_mobile.clone();
+                    Callback::from(move |_| show.set(!*show))
+                }
             />
             <div class="chat-main">
                 <div class="chat-header">
