@@ -9,6 +9,7 @@ A real-time chat application built with Rust, WebAssembly, and AWS cloud service
 - 📱 Responsive design for mobile and desktop
 - 🔄 Message synchronization and persistence
 - 🌐 Scalable serverless architecture
+- 🚀 Global content delivery with CloudFront CDN
 
 ## Architecture
 
@@ -79,13 +80,25 @@ git clone https://github.com/yourusername/rusty-chat-sync.git
 cd rusty-chat-sync
 ```
 
-2. Install dependencies:
+2. Set up environment variables:
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` with your AWS credentials and other configuration values:
+
+- `AWS_ACCESS_KEY_ID`: Your AWS access key
+- `AWS_SECRET_ACCESS_KEY`: Your AWS secret key
+- `AWS_REGION`: Your AWS region (e.g., us-east-1)
+
+3. Install dependencies:
 
 ```bash
 cargo build
 ```
 
-3. Deploy AWS infrastructure:
+4. Deploy AWS infrastructure:
 
 ```bash
 ./scripts/terraform.sh init
@@ -93,10 +106,10 @@ cargo build
 ./scripts/terraform.sh apply
 ```
 
-4. Configure the application:
+5. Configure the application:
    After terraform deployment, copy the outputs and update them in `src/config.rs`. The application uses hardcoded configuration values instead of environment variables due to WebAssembly and project scope limitations.
 
-5. Run the development server:
+6. Run the development server:
 
 ```bash
 trunk serve
@@ -104,19 +117,27 @@ trunk serve
 
 ### Deployment
 
-The application uses Terraform for infrastructure deployment. To deploy:
+The application uses Terraform for infrastructure deployment and a script for frontend deployment. To deploy:
 
-1. Initialize Terraform:
+1. Initialize and apply Terraform infrastructure:
 
 ```bash
 ./scripts/terraform.sh init
-```
-
-2. Apply the infrastructure:
-
-```bash
 ./scripts/terraform.sh apply
 ```
+
+2. Deploy the frontend:
+
+```bash
+./scripts/deploy_frontend.sh
+```
+
+This script will:
+
+- Build the Rust WASM application
+- Upload the built files to S3
+- Configure appropriate cache settings
+- Invalidate CloudFront cache
 
 ## Project Structure
 
